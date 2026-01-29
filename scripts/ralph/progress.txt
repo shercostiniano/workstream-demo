@@ -7,6 +7,9 @@
 - NextAuth.js v5 (beta) for authentication
 - Type checking: run `npx tsc --noEmit` (no npm typecheck script available)
 - Prisma field mapping: use `@map("snake_case")` for fields, `@@map("table_name")` for models
+- Prisma 7.x requires `@prisma/adapter-better-sqlite3` for SQLite - use `PrismaBetterSqlite3({ url: "path/to/db.db" })`
+- Prisma client singleton pattern: use `src/lib/prisma.ts` with global caching for development hot reload
+- Import from generated Prisma client: `import { PrismaClient } from "@/generated/prisma/client"` and `import { CategoryType } from "@/generated/prisma/client"`
 
 ---
 
@@ -37,5 +40,91 @@
   - Prisma uses `@map()` to rename fields for database (e.g., `passwordHash` -> `password_hash`)
   - Use `@@map()` to rename tables (e.g., `User` model -> `users` table)
   - Run `npx tsc --noEmit` for type checking since there's no `npm run typecheck` script
+---
+
+## 2026-01-29 - US-003
+- What was implemented: Created Category model in Prisma schema for transaction categories
+- Files changed:
+  - `prisma/schema.prisma` - Added CategoryType enum (income/expense) and Category model with id, user_id, name, type, is_default
+  - `prisma/migrations/20260129223532_add_categories_table/migration.sql` - Migration file for categories table
+- **Learnings for future iterations:**
+  - Prisma enums are defined at schema level with `enum EnumName { value1 value2 }`
+  - Relations are added to both models (e.g., `categories Category[]` on User and `user User @relation(...)` on Category)
+  - Foreign key fields use `@map()` for snake_case naming consistency
+---
+
+## 2026-01-29 - US-004
+- What was implemented: Created Transaction model in Prisma schema for income/expense transactions
+- Files changed:
+  - `prisma/schema.prisma` - Added Transaction model with id, user_id, type, amount (integer for cents), description, category_id, date, created_at, updated_at
+  - `prisma/migrations/20260129223712_add_transactions_table/migration.sql` - Migration file for transactions table
+- **Learnings for future iterations:**
+  - Transaction amount stored as Int (cents) to avoid floating point precision issues
+  - CategoryType enum can be reused across models (used for both Category and Transaction types)
+  - Relations need to be added to both ends (User.transactions, Category.transactions, Transaction.user, Transaction.category)
+---
+
+## 2026-01-29 - US-005
+- What was implemented: Created Invoice model in Prisma schema for invoices
+- Files changed:
+  - `prisma/schema.prisma` - Added InvoiceStatus enum (draft/sent/paid) and Invoice model with id, user_id, invoice_number, client_name, client_email, status, issue_date, due_date, notes, created_at, updated_at
+  - `prisma/migrations/20260129223859_add_invoices_table/migration.sql` - Migration file for invoices table
+- **Learnings for future iterations:**
+  - Each new model needs its own status enum when appropriate (InvoiceStatus separate from CategoryType)
+  - Optional fields use `?` suffix (e.g., `clientEmail String?` for nullable email)
+  - Always add the inverse relation to User model when creating new entities (User.invoices)
+---
+
+## 2026-01-29 - US-006
+- What was implemented: Created InvoiceItem model in Prisma schema for invoice line items
+- Files changed:
+  - `prisma/schema.prisma` - Added InvoiceItem model with id, invoice_id, description, quantity (Int), unit_price (Int for cents), and cascade delete relation to Invoice
+  - `prisma/migrations/20260129224043_add_invoice_items_table/migration.sql` - Migration file for invoice_items table
+- **Learnings for future iterations:**
+  - Cascade delete is configured via `onDelete: Cascade` in the relation decorator
+  - Invoice items don't need timestamps since they are tightly coupled to invoices
+  - The parent model (Invoice) needs `items InvoiceItem[]` for the inverse relation
+---
+
+## 2026-01-29 - US-007
+- What was implemented: Created Receipt model in Prisma schema for receipt uploads
+- Files changed:
+  - `prisma/schema.prisma` - Added Receipt model with id, user_id, transaction_id (nullable), file_path, file_name, uploaded_at, and relations to User and Transaction
+  - `prisma/migrations/20260129224250_add_receipts_table/migration.sql` - Migration file for receipts table
+- **Learnings for future iterations:**
+  - Nullable foreign keys use `String?` for the field type and `ModelName?` for the relation type
+  - Receipts can exist independently of transactions (transaction_id is nullable for unattached receipts)
+  - Remember to add inverse relations to all referenced models (User.receipts and Transaction.receipts)
+- Server actions pattern: create files in `src/lib/actions/` with `"use server"` directive at top
+
+---
+
+## 2026-01-29 - US-008
+- What was implemented: Created seed function for default categories and set up Prisma client singleton
+- Files changed:
+  - `src/lib/prisma.ts` - New file: Prisma client singleton with better-sqlite3 adapter
+  - `src/lib/seed-categories.ts` - New file: `seedDefaultCategories(userId)` function that creates default income/expense categories
+  - `package.json` - Added `@prisma/adapter-better-sqlite3` and `better-sqlite3` dependencies
+- **Learnings for future iterations:**
+  - Prisma 7.x requires a driver adapter for SQLite - use `@prisma/adapter-better-sqlite3`
+  - The adapter uses `PrismaBetterSqlite3({ url: "path.db" })` syntax (note: Sqlite3 not SQLite3)
+  - Generated Prisma types are in `@/generated/prisma/client` not `@/generated/prisma`
+  - Seed function uses `prisma.category.createMany()` for batch insertion
+  - Default categories are: Salary, Freelance, Investments, Other Income (income) and Rent, Utilities, Food, Transportation, Entertainment, Healthcare, Other Expense (expense)
+---
+
+## 2026-01-29 - US-009
+- What was implemented: User registration page with form validation and bcrypt password hashing
+- Files changed:
+  - `src/app/register/page.tsx` - New file: Registration page with form for email, password, confirm password, name
+  - `src/lib/actions/auth.ts` - New file: Server action `registerUser()` with validation and bcrypt hashing
+  - `package.json` - Added `bcryptjs` dependency for password hashing
+- **Learnings for future iterations:**
+  - Use `bcryptjs` instead of `bcrypt` for better cross-platform compatibility
+  - Server actions use `"use server"` directive and return typed results (e.g., `RegisterResult`)
+  - Email validation regex: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+  - Store emails lowercase to ensure case-insensitive uniqueness
+  - Client components use `"use client"` directive for forms with state
+  - Use `useRouter` from `next/navigation` for client-side navigation after form submission
 ---
 
