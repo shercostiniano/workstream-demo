@@ -1,7 +1,41 @@
 ## Codebase Patterns
-(Patterns will be added here as they are discovered during implementation)
+- Node.js installed via nvm: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"` must be sourced before npm commands
+- Project uses Next.js 16.1.6 with App Router and TypeScript
+- Tailwind CSS v4 with `@tailwindcss/postcss` plugin
+- shadcn/ui components are in `src/components/ui/`
+- Prisma configured with SQLite datasource (`prisma/schema.prisma`)
+- NextAuth.js v5 (beta) for authentication
+- Type checking: run `npx tsc --noEmit` (no npm typecheck script available)
+- Prisma field mapping: use `@map("snake_case")` for fields, `@@map("table_name")` for models
 
 ---
 
 # Progress Log
+
+## 2026-01-29 - US-001
+- What was implemented: Initialized Next.js project with all required dependencies
+- Files changed:
+  - Created entire project structure with Next.js 16.1.6
+  - Configured Tailwind CSS v4
+  - Installed and initialized Prisma ORM with SQLite
+  - Installed NextAuth.js v5 beta
+  - Added shadcn/ui with button, input, card, dialog, dropdown-menu, table components
+  - Installed Recharts for charts
+- **Learnings for future iterations:**
+  - Node.js needs to be set up via nvm before running npm commands
+  - Next.js create-next-app will fail if directory has existing files - need to create in subdirectory first then move
+  - Prisma uses a config file `prisma.config.ts` for datasource configuration
+  - shadcn/ui initialization uses `npx shadcn@latest init -d` for default settings
+---
+
+## 2026-01-29 - US-002
+- What was implemented: Created User model in Prisma schema with all required fields
+- Files changed:
+  - `prisma/schema.prisma` - Added User model with id, email (unique), password_hash, name, created_at, updated_at
+  - `prisma/migrations/20260129223330_add_user_table/migration.sql` - Migration file for users table
+- **Learnings for future iterations:**
+  - Prisma uses `@map()` to rename fields for database (e.g., `passwordHash` -> `password_hash`)
+  - Use `@@map()` to rename tables (e.g., `User` model -> `users` table)
+  - Run `npx tsc --noEmit` for type checking since there's no `npm run typecheck` script
+---
 
