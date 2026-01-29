@@ -79,7 +79,20 @@ model Invoice {
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user  User          @relation(fields: [userId], references: [id])
+  items InvoiceItem[]
 
   @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String @id @default(cuid())
+  invoiceId   String @map("invoice_id")
+  description String
+  quantity    Int
+  unitPrice   Int    @map("unit_price")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_items")
 }
