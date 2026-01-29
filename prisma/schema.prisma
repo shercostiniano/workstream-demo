@@ -18,7 +18,8 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  categories Category[]
+  categories   Category[]
+  transactions Transaction[]
 
   @@map("users")
 }
@@ -35,7 +36,25 @@ model Category {
   type      CategoryType
   isDefault Boolean      @default(false) @map("is_default")
 
-  user User @relation(fields: [userId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
 
   @@map("categories")
+}
+
+model Transaction {
+  id          String       @id @default(cuid())
+  userId      String       @map("user_id")
+  type        CategoryType
+  amount      Int
+  description String?
+  categoryId  String       @map("category_id")
+  date        DateTime
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@map("transactions")
 }
