@@ -18,5 +18,24 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  categories Category[]
+
   @@map("users")
+}
+
+enum CategoryType {
+  income
+  expense
+}
+
+model Category {
+  id        String       @id @default(cuid())
+  userId    String       @map("user_id")
+  name      String
+  type      CategoryType
+  isDefault Boolean      @default(false) @map("is_default")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("categories")
 }
