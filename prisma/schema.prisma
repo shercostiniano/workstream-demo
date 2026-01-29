@@ -20,6 +20,7 @@ model User {
 
   categories   Category[]
   transactions Transaction[]
+  invoices     Invoice[]
 
   @@map("users")
 }
@@ -27,6 +28,12 @@ model User {
 enum CategoryType {
   income
   expense
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
 }
 
 model Category {
@@ -57,4 +64,22 @@ model Transaction {
   category Category @relation(fields: [categoryId], references: [id])
 
   @@map("transactions")
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  userId        String        @map("user_id")
+  invoiceNumber String        @map("invoice_number")
+  clientName    String        @map("client_name")
+  clientEmail   String?       @map("client_email")
+  status        InvoiceStatus @default(draft)
+  issueDate     DateTime      @map("issue_date")
+  dueDate       DateTime      @map("due_date")
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("invoices")
 }
