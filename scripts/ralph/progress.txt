@@ -297,3 +297,18 @@
   - Use `e.stopPropagation()` on delete buttons inside clickable thumbnails
 ---
 
+## 2026-01-30 - US-027
+- What was implemented: View and delete receipts functionality
+- Files changed:
+  - `src/lib/actions/transactions.ts` - Added ReceiptInfo type and updated getTransactions to include receipts
+  - `src/components/receipts/receipt-upload.tsx` - Added ReceiptViewModal component with full-size view, download, and delete functionality
+  - `src/app/(dashboard)/transactions/page.tsx` - Added receipt thumbnail column to transactions table with view modal integration
+  - `src/lib/actions/receipts.ts` - Updated deleteReceipt to also delete the file from storage
+- **Learnings for future iterations:**
+  - TransactionWithCategory type needed to be extended to include receipts array
+  - ReceiptViewModal uses Dialog for viewing and AlertDialog for delete confirmation
+  - Download functionality uses programmatic anchor element creation with download attribute
+  - File deletion uses Node.js fs/promises unlink with try-catch to handle missing files gracefully
+  - Use `onClick={(e) => e.stopPropagation()}` wrapper div to prevent row click events when clicking thumbnails
+---
+
