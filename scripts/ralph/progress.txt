@@ -185,3 +185,13 @@
   - Actions return typed results with success/error pattern: `{ success: true; data: T } | { success: false; error: string }`
 ---
 
+## 2026-01-30 - US-019 (PRD Sync)
+- What was implemented: Synced PRD status - US-019 was already committed but PRD not updated
+- Files changed:
+  - `scripts/ralph/prd.json` - Marked US-019 as `passes: true`
+- **Learnings for future iterations:**
+  - PRD can get out of sync if previous iteration crashed after committing but before updating PRD
+  - Check git log against PRD when starting to identify already-completed work
+  - Categories page implements: grouped by type, add form with dialog, edit/delete with modals, disabled buttons for default categories, error messages for delete failures
+---
+
