@@ -263,3 +263,19 @@
   - Card components work well for grouping related information on detail pages
 ---
 
+## 2026-01-30 - US-025
+- What was implemented: Invoice delete and void functionality
+- Files changed:
+  - `prisma/schema.prisma` - Added `cancelled` status to InvoiceStatus enum
+  - `src/lib/actions/invoices.ts` - Added `voidInvoice` action for sent/paid invoices, updated validTransitions for cancelled status
+  - `src/lib/types.ts` - Added `cancelled` to InvoiceStatus type and object
+  - `src/app/(dashboard)/invoices/[id]/page.tsx` - Added Delete button (draft only) and Void button (sent/paid) with AlertDialog confirmations
+  - `src/app/(dashboard)/invoices/page.tsx` - Updated badge styling to handle cancelled status
+- **Learnings for future iterations:**
+  - SQLite doesn't require migrations for adding enum values (stored as strings)
+  - AlertDialog from shadcn/ui works well with AlertDialogTrigger wrapping a Button
+  - When adding enum values, update: Prisma schema, regenerate client, shared types file, and any Record<EnumType> maps
+  - Void action is separate from status transitions - it's a special case that doesn't follow the normal draft->sent->paid flow
+  - Use `variant="destructive"` for delete buttons and red styling for cancelled status badges
+---
+
