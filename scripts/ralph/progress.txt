@@ -250,3 +250,16 @@
   - Invoice totals are calculated server-side in the getInvoices action from line items
 ---
 
+## 2026-01-30 - US-024
+- What was implemented: Invoice detail and edit page with status change functionality
+- Files changed:
+  - `src/app/(dashboard)/invoices/[id]/page.tsx` - New file: Invoice detail page showing all invoice info, line items, edit modal for drafts, status change buttons
+- **Learnings for future iterations:**
+  - Dynamic routes in Next.js App Router use folder naming with brackets: `[id]/page.tsx`
+  - useParams() hook from next/navigation retrieves dynamic route parameters
+  - InvoiceForm component already supports editing via the `invoice` prop and handles read-only state for non-draft invoices
+  - Status change buttons should be conditional: Mark as Sent for draft, Mark as Paid for sent
+  - Reuse status badge styling functions from list page for consistency
+  - Card components work well for grouping related information on detail pages
+---
+
