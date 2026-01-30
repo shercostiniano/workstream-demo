@@ -350,11 +350,12 @@ export async function updateInvoiceStatus(
     return { success: false, error: "Invoice not found" }
   }
 
-  // Validate status transitions: draft -> sent -> paid
+  // Validate status transitions: draft -> sent -> paid (cancelled is terminal state)
   const validTransitions: Record<InvoiceStatus, InvoiceStatus[]> = {
     draft: ["sent"],
     sent: ["paid"],
     paid: [],
+    cancelled: [],
   }
 
   if (!validTransitions[invoice.status].includes(newStatus)) {
@@ -401,6 +402,42 @@ export async function deleteInvoice(id: string): Promise<InvoiceResult<void>> {
   // Delete the invoice (items will cascade delete due to schema)
   await prisma.invoice.delete({
     where: { id },
+  })
+
+  return { success: true, data: undefined }
+}
+
+export async function voidInvoice(id: string): Promise<InvoiceResult<void>> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  if (!id) {
+    return { success: false, error: "Invoice ID is required" }
+  }
+
+  // Verify the invoice belongs to the user
+  const invoice = await prisma.invoice.findFirst({
+    where: {
+      id,
+      userId,
+    },
+  })
+
+  if (!invoice) {
+    return { success: false, error: "Invoice not found" }
+  }
+
+  // Only sent or paid invoices can be voided
+  if (invoice.status !== "sent" && invoice.status !== "paid") {
+    return { success: false, error: "Only sent or paid invoices can be voided" }
+  }
+
+  // Mark as cancelled
+  await prisma.invoice.update({
+    where: { id },
+    data: { status: "cancelled" },
   })
 
   return { success: true, data: undefined }

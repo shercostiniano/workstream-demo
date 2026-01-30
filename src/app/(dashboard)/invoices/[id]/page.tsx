@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, Send, DollarSign, Edit } from "lucide-react"
+import { ArrowLeft, Send, DollarSign, Edit, Trash2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,10 +12,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { InvoiceForm } from "@/components/invoices/invoice-form"
 import {
   getInvoice,
   updateInvoiceStatus,
+  deleteInvoice,
+  voidInvoice,
   type InvoiceWithItems,
 } from "@/lib/actions/invoices"
 import { InvoiceStatus } from "@/lib/types"
@@ -35,7 +48,7 @@ function formatAmount(cents: number): string {
   })
 }
 
-function getStatusBadgeVariant(status: string): "secondary" | "default" | "outline" {
+function getStatusBadgeVariant(status: string): "secondary" | "default" | "outline" | "destructive" {
   switch (status) {
     case InvoiceStatus.draft:
       return "secondary" // gray
@@ -43,6 +56,8 @@ function getStatusBadgeVariant(status: string): "secondary" | "default" | "outli
       return "default" // blue
     case InvoiceStatus.paid:
       return "outline" // will style with green
+    case InvoiceStatus.cancelled:
+      return "destructive" // red
     default:
       return "secondary"
   }
@@ -54,6 +69,9 @@ function getStatusBadgeClassName(status: string): string {
   }
   if (status === InvoiceStatus.sent) {
     return "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-100"
+  }
+  if (status === InvoiceStatus.cancelled) {
+    return "bg-red-100 text-red-700 border-red-300 hover:bg-red-100"
   }
   return "" // default gray for draft
 }
@@ -68,6 +86,8 @@ export default function InvoiceDetailPage() {
   const [error, setError] = useState("")
   const [showEditModal, setShowEditModal] = useState(false)
   const [statusLoading, setStatusLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [voidLoading, setVoidLoading] = useState(false)
 
   const loadInvoice = useCallback(async () => {
     setLoading(true)
@@ -117,6 +137,32 @@ export default function InvoiceDetailPage() {
     setStatusLoading(false)
   }
 
+  const handleDelete = async () => {
+    if (!invoice) return
+
+    setDeleteLoading(true)
+    const result = await deleteInvoice(invoice.id)
+    if (result.success) {
+      router.push("/invoices")
+    } else {
+      setError(result.error)
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleVoid = async () => {
+    if (!invoice) return
+
+    setVoidLoading(true)
+    const result = await voidInvoice(invoice.id)
+    if (result.success) {
+      loadInvoice()
+    } else {
+      setError(result.error)
+    }
+    setVoidLoading(false)
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -144,6 +190,7 @@ export default function InvoiceDetailPage() {
   const isDraft = invoice.status === InvoiceStatus.draft
   const isSent = invoice.status === InvoiceStatus.sent
   const isPaid = invoice.status === InvoiceStatus.paid
+  const isCancelled = invoice.status === InvoiceStatus.cancelled
 
   return (
     <div className="space-y-6">
@@ -178,6 +225,26 @@ export default function InvoiceDetailPage() {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={deleteLoading}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deleteLoading ? "Deleting..." : "Delete"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete invoice {invoice.invoiceNumber}? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button onClick={handleMarkAsSent} disabled={statusLoading}>
                 <Send className="h-4 w-4 mr-2" />
                 {statusLoading ? "Updating..." : "Mark as Sent"}
@@ -185,10 +252,54 @@ export default function InvoiceDetailPage() {
             </>
           )}
           {isSent && (
-            <Button onClick={handleMarkAsPaid} disabled={statusLoading}>
-              <DollarSign className="h-4 w-4 mr-2" />
-              {statusLoading ? "Updating..." : "Mark as Paid"}
-            </Button>
+            <>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={voidLoading}>
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {voidLoading ? "Voiding..." : "Void Invoice"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Void Invoice</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to void invoice {invoice.invoiceNumber}? This will mark the invoice as cancelled and cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleVoid}>Void Invoice</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button onClick={handleMarkAsPaid} disabled={statusLoading}>
+                <DollarSign className="h-4 w-4 mr-2" />
+                {statusLoading ? "Updating..." : "Mark as Paid"}
+              </Button>
+            </>
+          )}
+          {isPaid && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" disabled={voidLoading}>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {voidLoading ? "Voiding..." : "Void Invoice"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Void Invoice</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to void invoice {invoice.invoiceNumber}? This will mark the invoice as cancelled and cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleVoid}>Void Invoice</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </div>
@@ -253,6 +364,9 @@ export default function InvoiceDetailPage() {
             )}
             {isDraft && (
               <p className="text-sm text-gray-500 mt-1">Draft</p>
+            )}
+            {isCancelled && (
+              <p className="text-sm text-red-600 mt-1">Cancelled</p>
             )}
           </CardContent>
         </Card>

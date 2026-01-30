@@ -38,7 +38,7 @@ function formatAmount(cents: number): string {
   })
 }
 
-function getStatusBadgeVariant(status: string): "secondary" | "default" | "outline" {
+function getStatusBadgeVariant(status: string): "secondary" | "default" | "outline" | "destructive" {
   switch (status) {
     case InvoiceStatus.draft:
       return "secondary" // gray
@@ -46,6 +46,8 @@ function getStatusBadgeVariant(status: string): "secondary" | "default" | "outli
       return "default" // blue
     case InvoiceStatus.paid:
       return "outline" // will style with green
+    case InvoiceStatus.cancelled:
+      return "destructive" // red
     default:
       return "secondary"
   }
@@ -57,6 +59,9 @@ function getStatusBadgeClassName(status: string): string {
   }
   if (status === InvoiceStatus.sent) {
     return "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-100"
+  }
+  if (status === InvoiceStatus.cancelled) {
+    return "bg-red-100 text-red-700 border-red-300 hover:bg-red-100"
   }
   return "" // default gray for draft
 }
