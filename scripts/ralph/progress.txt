@@ -279,3 +279,21 @@
   - Use `variant="destructive"` for delete buttons and red styling for cancelled status badges
 ---
 
+## 2026-01-30 - US-026
+- What was implemented: Receipt upload functionality with file upload, progress indicator, and transaction attachment
+- Files changed:
+  - `src/app/api/upload/route.ts` - New file: POST endpoint for file uploads with validation (jpg/png/pdf, max 5MB)
+  - `src/app/api/uploads/[filename]/route.ts` - New file: GET endpoint for serving uploaded files
+  - `src/lib/actions/receipts.ts` - New file: Server actions for getReceiptsForTransaction, linkReceiptToTransaction, deleteReceipt
+  - `src/components/receipts/receipt-upload.tsx` - New file: ReceiptUpload component with drag-and-drop, progress bar, ReceiptThumbnail, ReceiptList
+  - `src/components/transactions/transaction-form.tsx` - Updated: Added receipt upload UI to form, handles both new and editing modes
+- **Learnings for future iterations:**
+  - File uploads in Next.js App Router use FormData with the `file` field
+  - Use XMLHttpRequest for upload progress tracking (fetch doesn't support upload progress)
+  - Files are saved to `/uploads` directory with UUID-based unique names
+  - API routes serve files with appropriate Content-Type headers
+  - For new transactions, receipts are uploaded first then linked after transaction creation
+  - For editing, receipts can be uploaded directly with transactionId and are immediately linked
+  - Use `e.stopPropagation()` on delete buttons inside clickable thumbnails
+---
+
