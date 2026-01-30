@@ -10,6 +10,13 @@ import {
   type CategoryOption,
   type TransactionWithCategory,
 } from "@/lib/actions/transactions"
+import {
+  getReceiptsForTransaction,
+  linkReceiptToTransaction,
+  deleteReceipt,
+  type ReceiptInfo,
+} from "@/lib/actions/receipts"
+import { ReceiptUpload, ReceiptList } from "@/components/receipts/receipt-upload"
 import { CategoryType } from "@/lib/types"
 
 interface TransactionFormProps {
@@ -41,6 +48,8 @@ export function TransactionForm({ transaction, defaultType, onSuccess, onCancel 
     return today.toISOString().split("T")[0]
   })
   const [categories, setCategories] = useState<CategoryOption[]>([])
+  const [receipts, setReceipts] = useState<ReceiptInfo[]>([])
+  const [pendingReceipts, setPendingReceipts] = useState<Array<{ id: string; fileName: string; filePath: string }>>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -51,9 +60,21 @@ export function TransactionForm({ transaction, defaultType, onSuccess, onCancel 
     }
   }, [])
 
+  const loadReceipts = useCallback(async () => {
+    if (!transaction?.id) return
+    const result = await getReceiptsForTransaction(transaction.id)
+    if (result.success) {
+      setReceipts(result.data)
+    }
+  }, [transaction?.id])
+
   useEffect(() => {
     loadCategories()
   }, [loadCategories])
+
+  useEffect(() => {
+    loadReceipts()
+  }, [loadReceipts])
 
   // Filter categories by selected type
   const filteredCategories = categories.filter((cat) => cat.type === type)
@@ -120,6 +141,10 @@ export function TransactionForm({ transaction, defaultType, onSuccess, onCancel 
         })
 
         if (result.success) {
+          // Link any pending receipts to the transaction
+          for (const receipt of pendingReceipts) {
+            await linkReceiptToTransaction(receipt.id, transaction.id)
+          }
           onSuccess?.()
         } else {
           setError(result.error)
@@ -134,11 +159,16 @@ export function TransactionForm({ transaction, defaultType, onSuccess, onCancel 
         })
 
         if (result.success) {
+          // Link any pending receipts to the new transaction
+          for (const receipt of pendingReceipts) {
+            await linkReceiptToTransaction(receipt.id, result.data.id)
+          }
           // Clear form on success
           setAmount("")
           setDescription("")
           setCategoryId("")
           setDate(new Date().toISOString().split("T")[0])
+          setPendingReceipts([])
           onSuccess?.()
         } else {
           setError(result.error)
@@ -267,6 +297,56 @@ export function TransactionForm({ transaction, defaultType, onSuccess, onCancel 
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
+        />
+      </div>
+
+      {/* Receipt Upload */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Receipt (optional)
+        </label>
+
+        {/* Show existing receipts for editing */}
+        {receipts.length > 0 && (
+          <div className="mb-2">
+            <div className="text-xs text-gray-500 mb-1">Attached receipts:</div>
+            <ReceiptList
+              receipts={receipts}
+              onDelete={async (receiptId) => {
+                const result = await deleteReceipt(receiptId)
+                if (result.success) {
+                  setReceipts(receipts.filter(r => r.id !== receiptId))
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* Show pending receipts for new transactions */}
+        {pendingReceipts.length > 0 && (
+          <div className="mb-2">
+            <div className="text-xs text-gray-500 mb-1">Pending receipts:</div>
+            <ReceiptList
+              receipts={pendingReceipts}
+              onDelete={(receiptId) => {
+                setPendingReceipts(pendingReceipts.filter(r => r.id !== receiptId))
+              }}
+            />
+          </div>
+        )}
+
+        <ReceiptUpload
+          transactionId={transaction?.id}
+          onUploadComplete={(receipt) => {
+            if (transaction?.id) {
+              // For editing, reload receipts from server
+              loadReceipts()
+            } else {
+              // For new transactions, add to pending
+              setPendingReceipts([...pendingReceipts, receipt])
+            }
+          }}
+          disabled={loading}
         />
       </div>
 
