@@ -145,3 +145,13 @@
   - Form state needs special handling for edit mode (initialLoad flag to prevent clearing values on type change)
 ---
 
+## 2026-01-30 - US-010 through US-015 (PRD Sync)
+- What was implemented: Synced PRD status with existing commits
+- Files changed:
+  - `scripts/ralph/prd.json` - Marked US-010 through US-015 as `passes: true` since they were already committed
+- **Learnings for future iterations:**
+  - PRD file can become out of sync if previous iterations crashed or failed to update
+  - Check git log against PRD status when starting a session to identify already-completed work
+  - Stories US-010 (login), US-011 (logout/middleware), US-012 (navigation), US-013 (transaction actions), US-014 (transaction form), US-015 (transaction list) were previously implemented
+---
+
