@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { seedDefaultCategories } from "@/lib/seed-categories"
+import { signOut } from "@/lib/auth"
 import bcrypt from "bcryptjs"
 
 export type RegisterResult =
@@ -65,4 +66,8 @@ export async function registerUser(input: RegisterInput): Promise<RegisterResult
   await seedDefaultCategories(user.id)
 
   return { success: true }
+}
+
+export async function logout(): Promise<void> {
+  await signOut({ redirectTo: "/login" })
 }
