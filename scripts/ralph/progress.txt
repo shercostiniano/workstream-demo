@@ -209,3 +209,16 @@
   - Use lucide-react icons: TrendingUp (income), TrendingDown (expense), DollarSign (balance)
 ---
 
+## 2026-01-30 - US-021
+- What was implemented: Server actions for complete invoice CRUD operations
+- Files changed:
+  - `src/lib/actions/invoices.ts` - New file: createInvoice, getInvoices, getInvoice, updateInvoice, updateInvoiceStatus, deleteInvoice actions
+- **Learnings for future iterations:**
+  - Invoice number auto-generation uses count + 1 with zero-padding: `INV-${(count+1).toString().padStart(3, "0")}`
+  - Invoice totals are calculated from line items: `sum(quantity * unitPrice)`
+  - Status transitions are validated: draft -> sent -> paid (one-way only)
+  - Only draft invoices can be edited or deleted
+  - Use `prisma.$transaction()` when needing to delete and recreate related records (like replacing invoice items)
+  - Follow same result type pattern: `{ success: true; data: T } | { success: false; error: string }`
+---
+
