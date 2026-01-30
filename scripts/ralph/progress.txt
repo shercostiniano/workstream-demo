@@ -312,3 +312,31 @@
   - Use `onClick={(e) => e.stopPropagation()}` wrapper div to prevent row click events when clicking thumbnails
 ---
 
+
+## 2026-01-30 - US-028
+- What was implemented: Income vs Expense report with date range selector, summary cards, bar chart, and monthly breakdown
+- Files changed:
+  - `src/lib/actions/reports.ts` - New file: Server action `getIncomeExpenseReport` that calculates totals and monthly breakdown
+  - `src/app/(dashboard)/reports/page.tsx` - Updated: Full reports page with date range selector, quick filters, summary cards, Recharts bar chart, and monthly breakdown table
+- **Learnings for future iterations:**
+  - Recharts is already installed (`recharts: ^3.7.0`) - use ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+  - Recharts Tooltip formatter should return an array like `[formattedValue]` not `[value, undefined]`
+  - Monthly data aggregation: use Map with `year-month` keys, then sort by year and month number
+  - Quick filters for reports: "This Month", "Last Month", "Last 30 Days", "Year to Date", "Full Year"
+  - Show monthly breakdown table only when range spans multiple months (`monthlyBreakdown.length > 1`)
+  - Convert cents to dollars for chart display by dividing by 100
+---
+
+## 2026-01-30 - US-029
+- What was implemented: Category breakdown report with toggle, pie chart, and table
+- Files changed:
+  - `src/lib/actions/reports.ts` - Added `getCategoryBreakdown` action that calculates totals per category with percentages
+  - `src/app/(dashboard)/reports/page.tsx` - Added category breakdown section with income/expense toggle, Recharts PieChart, and breakdown table
+- **Learnings for future iterations:**
+  - PieChart from Recharts uses `Pie` component with `Cell` for colors and custom `label` prop for labels
+  - Recharts label prop receives props with optional fields (e.g., `name?: string; percent?: number`) - handle undefined cases
+  - Use color constants array (`CHART_COLORS`) to cycle through colors for pie segments
+  - Category data is grouped by categoryId using Map, then converted to array sorted by amount descending
+  - Reuse existing date range state from Income vs Expense report for the same period
+  - Add color indicator dots in table to match pie chart colors for visual consistency
+---

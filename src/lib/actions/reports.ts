@@ -34,6 +34,19 @@ async function getCurrentUserId(): Promise<string | null> {
   return session?.user?.id ?? null
 }
 
+export interface CategoryBreakdownItem {
+  categoryId: string
+  categoryName: string
+  amount: number
+  percentage: number
+}
+
+export interface CategoryBreakdownReport {
+  type: "income" | "expense"
+  totalAmount: number
+  categories: CategoryBreakdownItem[]
+}
+
 export async function getIncomeExpenseReport(
   filters: ReportFilters
 ): Promise<ReportResult<IncomeExpenseReport>> {
@@ -117,6 +130,74 @@ export async function getIncomeExpenseReport(
       totalExpenses,
       netProfitLoss: totalIncome - totalExpenses,
       monthlyBreakdown,
+    },
+  }
+}
+
+export async function getCategoryBreakdown(
+  filters: ReportFilters & { type: "income" | "expense" }
+): Promise<ReportResult<CategoryBreakdownReport>> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  // Fetch all transactions in the date range for the specified type
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: filters.type === "income" ? CategoryType.income : CategoryType.expense,
+      date: {
+        gte: filters.startDate,
+        lte: filters.endDate,
+      },
+    },
+    select: {
+      amount: true,
+      categoryId: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  })
+
+  // Group by category
+  const categoryMap = new Map<string, { name: string; amount: number }>()
+  let totalAmount = 0
+
+  for (const t of transactions) {
+    totalAmount += t.amount
+    const categoryId = t.categoryId
+
+    if (!categoryMap.has(categoryId)) {
+      categoryMap.set(categoryId, {
+        name: t.category.name,
+        amount: 0,
+      })
+    }
+
+    categoryMap.get(categoryId)!.amount += t.amount
+  }
+
+  // Convert to array with percentages, sorted by amount descending
+  const categories: CategoryBreakdownItem[] = Array.from(categoryMap.entries())
+    .map(([categoryId, data]) => ({
+      categoryId,
+      categoryName: data.name,
+      amount: data.amount,
+      percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+
+  return {
+    success: true,
+    data: {
+      type: filters.type,
+      totalAmount,
+      categories,
     },
   }
 }

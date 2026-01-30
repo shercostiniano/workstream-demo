@@ -22,11 +22,16 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts"
 import {
   getIncomeExpenseReport,
+  getCategoryBreakdown,
   type IncomeExpenseReport,
   type MonthlyData,
+  type CategoryBreakdownReport,
 } from "@/lib/actions/reports"
 
 function formatAmount(cents: number): string {
@@ -41,6 +46,12 @@ function formatDateForInput(date: Date): string {
 }
 
 type QuickFilter = "this-month" | "last-month" | "this-year" | "last-30-days" | "ytd"
+
+// Colors for pie chart segments
+const CHART_COLORS = [
+  "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8",
+  "#82ca9d", "#ffc658", "#ff7c43", "#a4de6c", "#d0ed57",
+]
 
 function getQuickFilterDates(filter: QuickFilter): { startDate: Date; endDate: Date } {
   const now = new Date()
@@ -95,6 +106,11 @@ export default function ReportsPage() {
   const [report, setReport] = useState<IncomeExpenseReport | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Category breakdown state
+  const [categoryType, setCategoryType] = useState<"income" | "expense">("expense")
+  const [categoryReport, setCategoryReport] = useState<CategoryBreakdownReport | null>(null)
+  const [categoryLoading, setCategoryLoading] = useState(true)
+
   const loadReport = async () => {
     setLoading(true)
     const result = await getIncomeExpenseReport({
@@ -107,10 +123,30 @@ export default function ReportsPage() {
     setLoading(false)
   }
 
+  const loadCategoryReport = async () => {
+    setCategoryLoading(true)
+    const result = await getCategoryBreakdown({
+      startDate,
+      endDate,
+      type: categoryType,
+    })
+    if (result.success) {
+      setCategoryReport(result.data)
+    }
+    setCategoryLoading(false)
+  }
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadReport()
+     
+    loadCategoryReport()
   }, [startDate, endDate]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadCategoryReport()
+  }, [categoryType]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleQuickFilter = (filter: QuickFilter) => {
     const dates = getQuickFilterDates(filter)
@@ -352,6 +388,124 @@ export default function ReportsPage() {
                 </div>
               )}
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Category Breakdown Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Category Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Type Toggle */}
+          <div className="flex gap-2 mb-6">
+            <Button
+              variant={categoryType === "expense" ? "default" : "outline"}
+              onClick={() => setCategoryType("expense")}
+            >
+              Expenses
+            </Button>
+            <Button
+              variant={categoryType === "income" ? "default" : "outline"}
+              onClick={() => setCategoryType("income")}
+            >
+              Income
+            </Button>
+          </div>
+
+          {categoryLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-gray-500">Loading category breakdown...</div>
+            </div>
+          ) : categoryReport && categoryReport.categories.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Pie Chart */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {categoryType === "expense" ? "Expenses" : "Income"} by Category
+                </h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryReport.categories}
+                        dataKey="amount"
+                        nameKey="categoryName"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ name, percent }: { name?: string; percent?: number }) =>
+                          `${name ?? ""}: ${((percent ?? 0) * 100).toFixed(1)}%`
+                        }
+                      >
+                        {categoryReport.categories.map((_, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => [formatAmount(Number(value))]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Category Table */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Breakdown Details</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Category</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Percentage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categoryReport.categories.map((cat, index) => (
+                      <TableRow key={cat.categoryId}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                            />
+                            {cat.categoryName}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatAmount(cat.amount)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {cat.percentage.toFixed(1)}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {/* Total Row */}
+                    <TableRow className="border-t-2 font-bold">
+                      <TableCell>Total</TableCell>
+                      <TableCell className="text-right">
+                        {formatAmount(categoryReport.totalAmount)}
+                      </TableCell>
+                      <TableCell className="text-right">100%</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No {categoryType === "expense" ? "expense" : "income"} data for selected period
+              </h3>
+              <p className="text-gray-600">
+                Try selecting a different date range or add some transactions.
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>
