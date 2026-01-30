@@ -238,3 +238,29 @@ export async function deleteTransaction(
 
   return { success: true, data: undefined }
 }
+
+// Category type for the form
+export interface CategoryOption {
+  id: string
+  name: string
+  type: CategoryType
+}
+
+export async function getCategories(): Promise<TransactionResult<CategoryOption[]>> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  const categories = await prisma.category.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      name: true,
+      type: true,
+    },
+    orderBy: { name: "asc" },
+  })
+
+  return { success: true, data: categories }
+}
