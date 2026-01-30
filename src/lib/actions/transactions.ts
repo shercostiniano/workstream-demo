@@ -296,6 +296,78 @@ export interface TransactionTotals {
   net: number
 }
 
+export interface DashboardSummary {
+  currentMonthIncome: number
+  currentMonthExpenses: number
+  netBalance: number
+  recentTransactions: TransactionWithCategory[]
+}
+
+export async function getDashboardSummary(): Promise<TransactionResult<DashboardSummary>> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  // Get first and last day of current month
+  const now = new Date()
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+  // Get all transactions for current month
+  const currentMonthTransactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      date: {
+        gte: firstDayOfMonth,
+        lte: lastDayOfMonth,
+      },
+    },
+    select: {
+      type: true,
+      amount: true,
+    },
+  })
+
+  // Calculate current month totals
+  let currentMonthIncome = 0
+  let currentMonthExpenses = 0
+
+  for (const t of currentMonthTransactions) {
+    if (t.type === "income") {
+      currentMonthIncome += t.amount
+    } else {
+      currentMonthExpenses += t.amount
+    }
+  }
+
+  // Get 5 most recent transactions with category info
+  const recentTransactions = await prisma.transaction.findMany({
+    where: { userId },
+    include: {
+      category: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+        },
+      },
+    },
+    orderBy: { date: "desc" },
+    take: 5,
+  })
+
+  return {
+    success: true,
+    data: {
+      currentMonthIncome,
+      currentMonthExpenses,
+      netBalance: currentMonthIncome - currentMonthExpenses,
+      recentTransactions,
+    },
+  }
+}
+
 export async function getTransactionTotals(
   filters?: Omit<TransactionFilters, "page" | "limit">
 ): Promise<TransactionResult<TransactionTotals>> {

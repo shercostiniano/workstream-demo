@@ -14,15 +14,16 @@ import { CategoryType } from "@/lib/types"
 
 interface TransactionFormProps {
   transaction?: TransactionWithCategory
+  defaultType?: CategoryType
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-export function TransactionForm({ transaction, onSuccess, onCancel }: TransactionFormProps) {
+export function TransactionForm({ transaction, defaultType, onSuccess, onCancel }: TransactionFormProps) {
   const isEditing = !!transaction
 
   const [type, setType] = useState<CategoryType>(
-    transaction?.type ?? CategoryType.expense
+    transaction?.type ?? defaultType ?? CategoryType.expense
   )
   const [amount, setAmount] = useState(() => {
     if (transaction) {
