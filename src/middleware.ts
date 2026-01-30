@@ -1,34 +1,10 @@
-import { auth } from "@/lib/auth"
-import { NextResponse } from "next/server"
+import NextAuth from "next-auth"
+import { authConfig } from "@/lib/auth.config"
 
-export default auth((req) => {
-  const { nextUrl } = req
-  const isLoggedIn = !!req.auth
+// Use Edge-compatible auth config for middleware
+export const { auth: middleware } = NextAuth(authConfig)
 
-  // Public routes that don't require authentication
-  const publicRoutes = ["/login", "/register"]
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname)
-
-  // API routes for auth should be accessible
-  const isAuthApiRoute = nextUrl.pathname.startsWith("/api/auth")
-
-  // Allow public routes and auth API routes
-  if (isPublicRoute || isAuthApiRoute) {
-    // If logged in and trying to access login/register, redirect to dashboard
-    if (isLoggedIn && isPublicRoute) {
-      return NextResponse.redirect(new URL("/", nextUrl))
-    }
-    return NextResponse.next()
-  }
-
-  // Redirect to login if not authenticated
-  if (!isLoggedIn) {
-    const loginUrl = new URL("/login", nextUrl)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  return NextResponse.next()
-})
+export default middleware
 
 export const config = {
   matcher: [

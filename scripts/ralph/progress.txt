@@ -340,3 +340,17 @@
   - Reuse existing date range state from Income vs Expense report for the same period
   - Add color indicator dots in table to match pie chart colors for visual consistency
 ---
+
+## 2026-01-30 - US-030
+- What was implemented: CSV export functionality for transactions
+- Files changed:
+  - `src/lib/actions/transactions.ts` - Added `exportTransactionsToCSV` action that generates CSV content from filtered transactions
+  - `src/app/(dashboard)/transactions/page.tsx` - Added Export CSV button that downloads filtered transactions as CSV file
+- **Learnings for future iterations:**
+  - CSV export uses Blob with `text/csv;charset=utf-8;` MIME type for proper encoding
+  - File download uses programmatic anchor element creation with download attribute
+  - Export respects current filters (date range, category) by reusing filter state
+  - Amount converted from cents to dollars with `.toFixed(2)` for consistent decimal formatting
+  - CSV strings with special characters (commas, quotes) should be quoted with double-quote escaping
+  - URL.createObjectURL needs cleanup with URL.revokeObjectURL after download
+---
