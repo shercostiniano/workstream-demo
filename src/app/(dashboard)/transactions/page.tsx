@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,10 +28,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { TransactionForm } from "@/components/transactions/transaction-form"
+import { TransactionFilters } from "@/components/transactions/transaction-filters"
 import {
   getTransactions,
+  getCategories,
+  getTransactionTotals,
   deleteTransaction,
   type TransactionWithCategory,
+  type CategoryOption,
+  type TransactionTotals,
 } from "@/lib/actions/transactions"
 import { CategoryType } from "@/lib/types"
 
@@ -50,22 +55,48 @@ function formatAmount(cents: number): string {
   })
 }
 
-export default function TransactionsPage() {
+interface Filters {
+  startDate?: Date
+  endDate?: Date
+  categoryIds?: string[]
+}
+
+function TransactionsContent() {
   const [transactions, setTransactions] = useState<TransactionWithCategory[]>([])
+  const [categories, setCategories] = useState<CategoryOption[]>([])
+  const [totals, setTotals] = useState<TransactionTotals | null>(null)
   const [pagination, setPagination] = useState({
     page: 1,
     totalPages: 1,
     total: 0,
   })
+  const [filters, setFilters] = useState<Filters>({})
   const [loading, setLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<TransactionWithCategory | null>(null)
   const [deletingTransaction, setDeletingTransaction] = useState<TransactionWithCategory | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const loadTransactions = useCallback(async (page: number = 1) => {
+  // Load categories on mount
+  useEffect(() => {
+    async function loadCategories() {
+      const result = await getCategories()
+      if (result.success) {
+        setCategories(result.data)
+      }
+    }
+    loadCategories()
+  }, [])
+
+  const loadTransactions = useCallback(async (page: number = 1, currentFilters: Filters = filters) => {
     setLoading(true)
-    const result = await getTransactions({ page, limit: 20 })
+    const result = await getTransactions({
+      page,
+      limit: 20,
+      startDate: currentFilters.startDate,
+      endDate: currentFilters.endDate,
+      categoryIds: currentFilters.categoryIds,
+    })
     if (result.success) {
       setTransactions(result.data.transactions)
       setPagination({
@@ -75,26 +106,45 @@ export default function TransactionsPage() {
       })
     }
     setLoading(false)
-  }, [])
+  }, [filters])
 
+  const loadTotals = useCallback(async (currentFilters: Filters = filters) => {
+    const result = await getTransactionTotals({
+      startDate: currentFilters.startDate,
+      endDate: currentFilters.endDate,
+      categoryIds: currentFilters.categoryIds,
+    })
+    if (result.success) {
+      setTotals(result.data)
+    }
+  }, [filters])
+
+  // Load transactions when filters change
   useEffect(() => {
-    loadTransactions()
-  }, [loadTransactions])
+    loadTransactions(1, filters)
+    loadTotals(filters)
+  }, [filters]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleFiltersChange = useCallback((newFilters: Filters) => {
+    setFilters(newFilters)
+  }, [])
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
-      loadTransactions(newPage)
+      loadTransactions(newPage, filters)
     }
   }
 
   const handleTransactionAdded = () => {
     setIsAddModalOpen(false)
-    loadTransactions(1) // Refresh and go back to page 1
+    loadTransactions(1, filters) // Refresh and go back to page 1
+    loadTotals(filters)
   }
 
   const handleTransactionUpdated = () => {
     setEditingTransaction(null)
-    loadTransactions(pagination.page) // Refresh current page
+    loadTransactions(pagination.page, filters) // Refresh current page
+    loadTotals(filters)
   }
 
   const handleRowClick = (transaction: TransactionWithCategory) => {
@@ -117,10 +167,11 @@ export default function TransactionsPage() {
       setDeletingTransaction(null)
       // If we're on a page with only one item and it's not the first page, go back
       if (transactions.length === 1 && pagination.page > 1) {
-        loadTransactions(pagination.page - 1)
+        loadTransactions(pagination.page - 1, filters)
       } else {
-        loadTransactions(pagination.page)
+        loadTransactions(pagination.page, filters)
       }
+      loadTotals(filters)
     }
   }
 
@@ -139,6 +190,38 @@ export default function TransactionsPage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <TransactionFilters
+        categories={categories}
+        onFiltersChange={handleFiltersChange}
+      />
+
+      {/* Running Totals */}
+      {totals && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="text-sm font-medium text-green-600">Total Income</div>
+            <div className="text-2xl font-bold text-green-700">
+              {formatAmount(totals.income)}
+            </div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="text-sm font-medium text-red-600">Total Expenses</div>
+            <div className="text-2xl font-bold text-red-700">
+              {formatAmount(totals.expense)}
+            </div>
+          </div>
+          <div className={`${totals.net >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"} border rounded-lg p-4`}>
+            <div className={`text-sm font-medium ${totals.net >= 0 ? "text-blue-600" : "text-orange-600"}`}>
+              Net Balance
+            </div>
+            <div className={`text-2xl font-bold ${totals.net >= 0 ? "text-blue-700" : "text-orange-700"}`}>
+              {totals.net >= 0 ? "+" : ""}{formatAmount(totals.net)}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center items-center py-12">
           <div className="text-gray-500">Loading transactions...</div>
@@ -146,10 +229,12 @@ export default function TransactionsPage() {
       ) : transactions.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No transactions yet
+            No transactions found
           </h3>
           <p className="text-gray-600 mb-4">
-            Get started by adding your first income or expense transaction.
+            {filters.startDate || filters.endDate || filters.categoryIds?.length
+              ? "Try adjusting your filters or add a new transaction."
+              : "Get started by adding your first income or expense transaction."}
           </p>
           <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -309,5 +394,13 @@ export default function TransactionsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+export default function TransactionsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center py-12"><div className="text-gray-500">Loading...</div></div>}>
+      <TransactionsContent />
+    </Suspense>
   )
 }

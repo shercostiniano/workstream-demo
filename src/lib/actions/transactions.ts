@@ -289,3 +289,69 @@ export async function getCategories(): Promise<TransactionResult<CategoryOption[
 
   return { success: true, data: categories }
 }
+
+export interface TransactionTotals {
+  income: number
+  expense: number
+  net: number
+}
+
+export async function getTransactionTotals(
+  filters?: Omit<TransactionFilters, "page" | "limit">
+): Promise<TransactionResult<TransactionTotals>> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  // Build where clause with filters (same as getTransactions)
+  const where: {
+    userId: string
+    date?: { gte?: Date; lte?: Date }
+    categoryId?: { in: string[] }
+  } = { userId }
+
+  if (filters?.startDate || filters?.endDate) {
+    where.date = {}
+    if (filters.startDate) {
+      where.date.gte = filters.startDate
+    }
+    if (filters.endDate) {
+      where.date.lte = filters.endDate
+    }
+  }
+
+  if (filters?.categoryIds && filters.categoryIds.length > 0) {
+    where.categoryId = { in: filters.categoryIds }
+  }
+
+  // Get all transactions matching filters
+  const transactions = await prisma.transaction.findMany({
+    where,
+    select: {
+      type: true,
+      amount: true,
+    },
+  })
+
+  // Calculate totals
+  let income = 0
+  let expense = 0
+
+  for (const t of transactions) {
+    if (t.type === "income") {
+      income += t.amount
+    } else {
+      expense += t.amount
+    }
+  }
+
+  return {
+    success: true,
+    data: {
+      income,
+      expense,
+      net: income - expense,
+    },
+  }
+}
