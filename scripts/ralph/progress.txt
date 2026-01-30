@@ -222,3 +222,19 @@
   - Follow same result type pattern: `{ success: true; data: T } | { success: false; error: string }`
 ---
 
+## 2026-01-30 - US-022
+- What was implemented: Invoice form component with client info, line items, and action buttons
+- Files changed:
+  - `src/components/invoices/invoice-form.tsx` - New file: InvoiceForm component with dynamic line items, validation, and draft/sent actions
+  - `src/app/(dashboard)/invoices/page.tsx` - Updated: Added Create Invoice button and modal
+  - `src/lib/types.ts` - Updated: Added InvoiceStatus type for client components
+- **Learnings for future iterations:**
+  - Invoice form uses dynamic line items with add/remove functionality
+  - Each line item has id, description, quantity, unitPrice (as strings for form inputs)
+  - Convert unit price from dollars to cents on save: `Math.round(parseFloat(price) * 100)`
+  - Default due date is 30 days from issue date
+  - Mark as Sent flow: first save/update invoice, then update status to "sent"
+  - Use `router.refresh()` after updates to refresh server data
+  - Client components can't import Prisma types - use shared types file for InvoiceStatus
+---
+
