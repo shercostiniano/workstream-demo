@@ -10,3 +10,13 @@ export const CategoryType = {
   income: "income" as const,
   expense: "expense" as const,
 }
+
+// Invoice status type - mirrors the Prisma enum
+export type InvoiceStatus = "draft" | "sent" | "paid"
+
+// Re-export as an object with enum-like values for runtime comparison
+export const InvoiceStatus = {
+  draft: "draft" as const,
+  sent: "sent" as const,
+  paid: "paid" as const,
+}
