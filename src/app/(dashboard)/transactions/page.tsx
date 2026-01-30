@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, Suspense } from "react"
-import { Plus, Trash2, Paperclip } from "lucide-react"
+import { Plus, Trash2, Paperclip, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -35,6 +35,7 @@ import {
   getCategories,
   getTransactionTotals,
   deleteTransaction,
+  exportTransactionsToCSV,
   type TransactionWithCategory,
   type CategoryOption,
   type TransactionTotals,
@@ -79,6 +80,7 @@ function TransactionsContent() {
   const [deletingTransaction, setDeletingTransaction] = useState<TransactionWithCategory | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [viewingReceipt, setViewingReceipt] = useState<ReceiptInfo | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Load categories on mount
   useEffect(() => {
@@ -183,6 +185,33 @@ function TransactionsContent() {
     loadTransactions(pagination.page, filters)
   }
 
+  const handleExport = async () => {
+    setIsExporting(true)
+    const result = await exportTransactionsToCSV({
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+      categoryIds: filters.categoryIds,
+    })
+    setIsExporting(false)
+
+    if (result.success) {
+      // Create filename with current date
+      const today = new Date().toISOString().split("T")[0]
+      const filename = `transactions_${today}.csv`
+
+      // Create blob and download
+      const blob = new Blob([result.data], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    }
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -192,10 +221,20 @@ function TransactionsContent() {
             Manage your income and expense transactions.
           </p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Transaction
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting || loading || transactions.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </Button>
+          <Button onClick={() => setIsAddModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Transaction
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

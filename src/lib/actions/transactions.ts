@@ -448,3 +448,63 @@ export async function getTransactionTotals(
     },
   }
 }
+
+export async function exportTransactionsToCSV(
+  filters?: Omit<TransactionFilters, "page" | "limit">
+): Promise<TransactionResult<string>> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  // Build where clause with filters (same as getTransactions)
+  const where: {
+    userId: string
+    date?: { gte?: Date; lte?: Date }
+    categoryId?: { in: string[] }
+  } = { userId }
+
+  if (filters?.startDate || filters?.endDate) {
+    where.date = {}
+    if (filters.startDate) {
+      where.date.gte = filters.startDate
+    }
+    if (filters.endDate) {
+      where.date.lte = filters.endDate
+    }
+  }
+
+  if (filters?.categoryIds && filters.categoryIds.length > 0) {
+    where.categoryId = { in: filters.categoryIds }
+  }
+
+  // Get all transactions matching filters (no pagination for export)
+  const transactions = await prisma.transaction.findMany({
+    where,
+    include: {
+      category: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      date: "desc",
+    },
+  })
+
+  // Build CSV content
+  const headers = ["date", "type", "description", "category", "amount"]
+  const rows = transactions.map((t) => {
+    const date = new Date(t.date).toISOString().split("T")[0] // YYYY-MM-DD format
+    const type = t.type
+    const description = t.description ? `"${t.description.replace(/"/g, '""')}"` : ""
+    const category = `"${t.category.name.replace(/"/g, '""')}"`
+    const amount = (t.amount / 100).toFixed(2) // Convert cents to dollars
+    return [date, type, description, category, amount].join(",")
+  })
+
+  const csvContent = [headers.join(","), ...rows].join("\n")
+
+  return { success: true, data: csvContent }
+}
