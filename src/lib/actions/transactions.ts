@@ -41,6 +41,12 @@ export interface PaginatedTransactions {
   totalPages: number
 }
 
+export interface ReceiptInfo {
+  id: string
+  fileName: string
+  filePath: string
+}
+
 export interface TransactionWithCategory {
   id: string
   type: CategoryType
@@ -55,6 +61,7 @@ export interface TransactionWithCategory {
     name: string
     type: CategoryType
   }
+  receipts: ReceiptInfo[]
 }
 
 async function getCurrentUserId(): Promise<string | null> {
@@ -153,6 +160,13 @@ export async function getTransactions(
           id: true,
           name: true,
           type: true,
+        },
+      },
+      receipts: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
         },
       },
     },
@@ -350,6 +364,13 @@ export async function getDashboardSummary(): Promise<TransactionResult<Dashboard
           id: true,
           name: true,
           type: true,
+        },
+      },
+      receipts: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
         },
       },
     },

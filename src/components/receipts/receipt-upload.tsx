@@ -1,8 +1,25 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Upload, X, FileText, Image as ImageIcon } from "lucide-react"
+import { Upload, X, FileText, Download, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { deleteReceipt } from "@/lib/actions/receipts"
 
 interface UploadedReceipt {
   id: string
@@ -261,5 +278,126 @@ export function ReceiptList({ receipts, onDelete, onView }: ReceiptListProps) {
         />
       ))}
     </div>
+  )
+}
+
+interface ReceiptViewModalProps {
+  receipt: {
+    id: string
+    fileName: string
+    filePath: string
+  } | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onDelete?: (receiptId: string) => void
+}
+
+export function ReceiptViewModal({
+  receipt,
+  open,
+  onOpenChange,
+  onDelete,
+}: ReceiptViewModalProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  if (!receipt) return null
+
+  const isPdf = receipt.fileName.toLowerCase().endsWith(".pdf")
+  const apiPath = `/api/uploads/${receipt.filePath.split("/").pop()}`
+
+  const handleDownload = () => {
+    const link = document.createElement("a")
+    link.href = apiPath
+    link.download = receipt.fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    const result = await deleteReceipt(receipt.id)
+    setIsDeleting(false)
+
+    if (result.success) {
+      setShowDeleteConfirm(false)
+      onOpenChange(false)
+      onDelete?.(receipt.id)
+    }
+  }
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between pr-8">
+              <span className="truncate">{receipt.fileName}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center">
+            {isPdf ? (
+              <div className="w-full h-[60vh]">
+                <iframe
+                  src={apiPath}
+                  className="w-full h-full border rounded"
+                  title={receipt.fileName}
+                />
+              </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={apiPath}
+                alt={receipt.fileName}
+                className="max-w-full max-h-[60vh] object-contain rounded border"
+              />
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={handleDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            {onDelete && (
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Receipt</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this receipt? This action cannot
+              be undone.
+              <span className="block mt-2 font-medium text-gray-700">
+                {receipt.fileName}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

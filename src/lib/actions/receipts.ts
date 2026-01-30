@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import { unlink } from "fs/promises"
+import path from "path"
 
 export type ReceiptResult<T = void> =
   | { success: true; data: T }
@@ -121,8 +123,15 @@ export async function deleteReceipt(
     return { success: false, error: "Receipt not found" }
   }
 
+  // Delete file from storage
+  try {
+    const filePath = path.join(process.cwd(), receipt.filePath)
+    await unlink(filePath)
+  } catch {
+    // File may already be deleted or not exist, continue with database cleanup
+  }
+
   // Delete record from database
-  // Note: File remains on disk for now (could add cleanup in future)
   await prisma.receipt.delete({
     where: { id: receiptId },
   })

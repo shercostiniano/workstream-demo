@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, Suspense } from "react"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Paperclip } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { TransactionForm } from "@/components/transactions/transaction-form"
 import { TransactionFilters } from "@/components/transactions/transaction-filters"
+import { ReceiptThumbnail, ReceiptViewModal } from "@/components/receipts/receipt-upload"
 import {
   getTransactions,
   getCategories,
@@ -37,6 +38,7 @@ import {
   type TransactionWithCategory,
   type CategoryOption,
   type TransactionTotals,
+  type ReceiptInfo,
 } from "@/lib/actions/transactions"
 import { CategoryType } from "@/lib/types"
 
@@ -76,6 +78,7 @@ function TransactionsContent() {
   const [editingTransaction, setEditingTransaction] = useState<TransactionWithCategory | null>(null)
   const [deletingTransaction, setDeletingTransaction] = useState<TransactionWithCategory | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [viewingReceipt, setViewingReceipt] = useState<ReceiptInfo | null>(null)
 
   // Load categories on mount
   useEffect(() => {
@@ -175,6 +178,11 @@ function TransactionsContent() {
     }
   }
 
+  const handleReceiptDeleted = () => {
+    // Refresh the transactions list after receipt deletion
+    loadTransactions(pagination.page, filters)
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -250,6 +258,9 @@ function TransactionsContent() {
                 <TableHead>Description</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="w-[60px] text-center">
+                  <Paperclip className="h-4 w-4 mx-auto text-gray-500" />
+                </TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -276,6 +287,17 @@ function TransactionsContent() {
                   >
                     {transaction.type === CategoryType.income ? "+" : "-"}
                     {formatAmount(transaction.amount)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {transaction.receipts.length > 0 && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <ReceiptThumbnail
+                          receipt={transaction.receipts[0]}
+                          showDelete={false}
+                          onClick={() => setViewingReceipt(transaction.receipts[0])}
+                        />
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Button
@@ -393,6 +415,16 @@ function TransactionsContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Receipt View Modal */}
+      <ReceiptViewModal
+        receipt={viewingReceipt}
+        open={!!viewingReceipt}
+        onOpenChange={(open) => {
+          if (!open) setViewingReceipt(null)
+        }}
+        onDelete={handleReceiptDeleted}
+      />
     </div>
   )
 }
