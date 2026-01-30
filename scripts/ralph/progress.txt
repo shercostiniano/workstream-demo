@@ -173,3 +173,15 @@
   - Multi-select category filter uses Popover + Checkbox pattern from shadcn/ui
 ---
 
+## 2026-01-30 - US-018
+- What was implemented: Server actions for full CRUD operations on categories
+- Files changed:
+  - `src/lib/actions/categories.ts` - New file: getCategories, createCategory, updateCategory, deleteCategory actions
+- **Learnings for future iterations:**
+  - Server actions for a new entity follow the same pattern as transactions.ts
+  - Category delete must check for transactions using the category before allowing deletion
+  - Default categories have `isDefault: true` and cannot be edited or deleted
+  - Duplicate category check needs to include type (income/expense) - same name can exist for different types
+  - Actions return typed results with success/error pattern: `{ success: true; data: T } | { success: false; error: string }`
+---
+
