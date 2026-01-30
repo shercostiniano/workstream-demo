@@ -195,3 +195,17 @@
   - Categories page implements: grouped by type, add form with dialog, edit/delete with modals, disabled buttons for default categories, error messages for delete failures
 ---
 
+## 2026-01-30 - US-020
+- What was implemented: Dashboard page with financial summary
+- Files changed:
+  - `src/app/(dashboard)/page.tsx` - Complete dashboard with summary cards, recent transactions, and quick action buttons
+  - `src/lib/actions/transactions.ts` - Added `getDashboardSummary` action for current month totals and recent transactions
+  - `src/components/transactions/transaction-form.tsx` - Added `defaultType` prop for quick action buttons
+- **Learnings for future iterations:**
+  - Dashboard uses Card components from shadcn/ui for summary display
+  - Quick action buttons require passing `defaultType` to TransactionForm to pre-select income/expense
+  - Current month date range: first day of month to last day (with 23:59:59.999 for inclusive end)
+  - Summary data (totals + recent transactions) can be combined in a single server action to reduce round trips
+  - Use lucide-react icons: TrendingUp (income), TrendingDown (expense), DollarSign (balance)
+---
+
