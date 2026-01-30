@@ -30,6 +30,15 @@ export interface TransactionFilters {
   startDate?: Date
   endDate?: Date
   categoryIds?: string[]
+  page?: number
+  limit?: number
+}
+
+export interface PaginatedTransactions {
+  transactions: TransactionWithCategory[]
+  total: number
+  page: number
+  totalPages: number
 }
 
 export interface TransactionWithCategory {
@@ -103,11 +112,14 @@ export async function createTransaction(
 
 export async function getTransactions(
   filters?: TransactionFilters
-): Promise<TransactionResult<TransactionWithCategory[]>> {
+): Promise<TransactionResult<PaginatedTransactions>> {
   const userId = await getCurrentUserId()
   if (!userId) {
     return { success: false, error: "Not authenticated" }
   }
+
+  const page = filters?.page ?? 1
+  const limit = filters?.limit ?? 20
 
   // Build where clause with filters
   const where: {
@@ -130,6 +142,9 @@ export async function getTransactions(
     where.categoryId = { in: filters.categoryIds }
   }
 
+  // Get total count for pagination
+  const total = await prisma.transaction.count({ where })
+
   const transactions = await prisma.transaction.findMany({
     where,
     include: {
@@ -144,9 +159,19 @@ export async function getTransactions(
     orderBy: {
       date: "desc",
     },
+    skip: (page - 1) * limit,
+    take: limit,
   })
 
-  return { success: true, data: transactions }
+  return {
+    success: true,
+    data: {
+      transactions,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
 }
 
 export async function updateTransaction(
