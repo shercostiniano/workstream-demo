@@ -155,3 +155,21 @@
   - Stories US-010 (login), US-011 (logout/middleware), US-012 (navigation), US-013 (transaction actions), US-014 (transaction form), US-015 (transaction list) were previously implemented
 ---
 
+## 2026-01-30 - US-017
+- What was implemented: Transaction filters with date range, quick filters, category multi-select, and running totals
+- Files changed:
+  - `src/components/transactions/transaction-filters.tsx` - New file: Filter component with date range picker, quick filter buttons, category multi-select
+  - `src/app/(dashboard)/transactions/page.tsx` - Updated: Integrated filters, added totals display, wrapped in Suspense for URL params
+  - `src/lib/actions/transactions.ts` - Updated: Added `getTransactionTotals` action for calculating filtered totals
+  - `src/components/ui/checkbox.tsx` - New file: shadcn/ui checkbox component
+  - `src/components/ui/popover.tsx` - New file: shadcn/ui popover component
+  - `src/components/ui/badge.tsx` - New file: shadcn/ui badge component
+  - `src/components/ui/select.tsx` - New file: shadcn/ui select component
+- **Learnings for future iterations:**
+  - useSearchParams requires Suspense boundary in Next.js App Router
+  - URL params are persisted via router.replace with scroll: false to prevent page jumps
+  - Quick filter dates need end-of-day time (23:59:59) for inclusive date ranges
+  - Totals are calculated separately from paginated results for accuracy
+  - Multi-select category filter uses Popover + Checkbox pattern from shadcn/ui
+---
+
