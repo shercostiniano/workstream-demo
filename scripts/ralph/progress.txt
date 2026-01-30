@@ -238,3 +238,15 @@
   - Client components can't import Prisma types - use shared types file for InvoiceStatus
 ---
 
+## 2026-01-30 - US-023
+- What was implemented: Invoices list page with table, status badges, and row navigation
+- Files changed:
+  - `src/app/(dashboard)/invoices/page.tsx` - Updated: Full list page with table showing invoice number, client name, total, status badge, due date, row click navigation to detail page
+- **Learnings for future iterations:**
+  - Badge component from shadcn/ui supports variant prop (secondary, default, outline) plus custom className for colors
+  - Status badge styling: gray=draft (secondary), blue=sent (default with custom blue classes), green=paid (outline with custom green classes)
+  - `eslint-disable-next-line react-hooks/set-state-in-effect` directive must be placed INSIDE the useEffect body, directly above the function call that triggers setState
+  - Row click navigation uses `router.push(\`/invoices/\${invoice.id}\`)`
+  - Invoice totals are calculated server-side in the getInvoices action from line items
+---
+
