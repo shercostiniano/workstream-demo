@@ -5,22 +5,37 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   createTransaction,
+  updateTransaction,
   getCategories,
   type CategoryOption,
+  type TransactionWithCategory,
 } from "@/lib/actions/transactions"
-import { CategoryType } from "@/generated/prisma/client"
+import { CategoryType } from "@/lib/types"
 
 interface TransactionFormProps {
+  transaction?: TransactionWithCategory
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
-  const [type, setType] = useState<CategoryType>(CategoryType.expense)
-  const [amount, setAmount] = useState("")
-  const [description, setDescription] = useState("")
-  const [categoryId, setCategoryId] = useState("")
+export function TransactionForm({ transaction, onSuccess, onCancel }: TransactionFormProps) {
+  const isEditing = !!transaction
+
+  const [type, setType] = useState<CategoryType>(
+    transaction?.type ?? CategoryType.expense
+  )
+  const [amount, setAmount] = useState(() => {
+    if (transaction) {
+      return (transaction.amount / 100).toString()
+    }
+    return ""
+  })
+  const [description, setDescription] = useState(transaction?.description ?? "")
+  const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "")
   const [date, setDate] = useState(() => {
+    if (transaction) {
+      return new Date(transaction.date).toISOString().split("T")[0]
+    }
     const today = new Date()
     return today.toISOString().split("T")[0]
   })
@@ -42,10 +57,15 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
   // Filter categories by selected type
   const filteredCategories = categories.filter((cat) => cat.type === type)
 
-  // Reset category when type changes
+  // Reset category when type changes (but not for initial load when editing)
+  const [initialLoad, setInitialLoad] = useState(true)
   useEffect(() => {
+    if (initialLoad) {
+      setInitialLoad(false)
+      return
+    }
     setCategoryId("")
-  }, [type])
+  }, [type, initialLoad])
 
   const validateForm = (): string | null => {
     const amountNum = parseFloat(amount)
@@ -88,23 +108,40 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       // Convert amount from dollars to cents
       const amountInCents = Math.round(parseFloat(amount) * 100)
 
-      const result = await createTransaction({
-        type,
-        amount: amountInCents,
-        description: description.trim() || undefined,
-        categoryId,
-        date: new Date(date),
-      })
+      if (isEditing) {
+        const result = await updateTransaction({
+          id: transaction.id,
+          type,
+          amount: amountInCents,
+          description: description.trim() || undefined,
+          categoryId,
+          date: new Date(date),
+        })
 
-      if (result.success) {
-        // Clear form on success
-        setAmount("")
-        setDescription("")
-        setCategoryId("")
-        setDate(new Date().toISOString().split("T")[0])
-        onSuccess?.()
+        if (result.success) {
+          onSuccess?.()
+        } else {
+          setError(result.error)
+        }
       } else {
-        setError(result.error)
+        const result = await createTransaction({
+          type,
+          amount: amountInCents,
+          description: description.trim() || undefined,
+          categoryId,
+          date: new Date(date),
+        })
+
+        if (result.success) {
+          // Clear form on success
+          setAmount("")
+          setDescription("")
+          setCategoryId("")
+          setDate(new Date().toISOString().split("T")[0])
+          onSuccess?.()
+        } else {
+          setError(result.error)
+        }
       }
     } catch {
       setError("An unexpected error occurred")
@@ -245,7 +282,7 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
           </Button>
         )}
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save Transaction"}
+          {loading ? "Saving..." : isEditing ? "Save Changes" : "Save Transaction"}
         </Button>
       </div>
     </form>

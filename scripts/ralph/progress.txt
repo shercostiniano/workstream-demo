@@ -10,6 +10,8 @@
 - Prisma 7.x requires `@prisma/adapter-better-sqlite3` for SQLite - use `PrismaBetterSqlite3({ url: "path/to/db.db" })`
 - Prisma client singleton pattern: use `src/lib/prisma.ts` with global caching for development hot reload
 - Import from generated Prisma client: `import { PrismaClient } from "@/generated/prisma/client"` and `import { CategoryType } from "@/generated/prisma/client"`
+- IMPORTANT: Client components ("use client") cannot import from `@/generated/prisma/client` - use `@/lib/types` for shared types like CategoryType
+- AlertDialog component from shadcn/ui for confirmation dialogs
 
 ---
 
@@ -126,5 +128,20 @@
   - Store emails lowercase to ensure case-insensitive uniqueness
   - Client components use `"use client"` directive for forms with state
   - Use `useRouter` from `next/navigation` for client-side navigation after form submission
+---
+
+## 2026-01-30 - US-016
+- What was implemented: Edit and delete functionality for transactions
+- Files changed:
+  - `src/app/(dashboard)/transactions/page.tsx` - Updated: Added edit modal with TransactionForm, delete button with AlertDialog confirmation
+  - `src/components/transactions/transaction-form.tsx` - Updated: Added support for editing (accepts optional transaction prop, uses updateTransaction action)
+  - `src/components/ui/alert-dialog.tsx` - New file: Added AlertDialog shadcn/ui component for delete confirmation
+  - `src/lib/types.ts` - New file: Shared types for client components (CategoryType enum-like object)
+- **Learnings for future iterations:**
+  - Client components cannot import from `@/generated/prisma/client` - it pulls Node.js-only code into the browser bundle
+  - Use a shared types file (`src/lib/types.ts`) to export enum-like values that can be used in client components
+  - AlertDialog from shadcn/ui provides confirmation dialogs with AlertDialogAction/AlertDialogCancel
+  - Row click for edit with e.stopPropagation() on delete button to prevent edit modal from opening
+  - Form state needs special handling for edit mode (initialLoad flag to prevent clearing values on type change)
 ---
 

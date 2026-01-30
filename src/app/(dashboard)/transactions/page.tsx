@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -17,13 +17,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { TransactionForm } from "@/components/transactions/transaction-form"
 import {
   getTransactions,
+  deleteTransaction,
   type TransactionWithCategory,
-  type PaginatedTransactions,
 } from "@/lib/actions/transactions"
-import { CategoryType } from "@/generated/prisma/client"
+import { CategoryType } from "@/lib/types"
 
 function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("en-US", {
@@ -49,6 +59,9 @@ export default function TransactionsPage() {
   })
   const [loading, setLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<TransactionWithCategory | null>(null)
+  const [deletingTransaction, setDeletingTransaction] = useState<TransactionWithCategory | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const loadTransactions = useCallback(async (page: number = 1) => {
     setLoading(true)
@@ -77,6 +90,38 @@ export default function TransactionsPage() {
   const handleTransactionAdded = () => {
     setIsAddModalOpen(false)
     loadTransactions(1) // Refresh and go back to page 1
+  }
+
+  const handleTransactionUpdated = () => {
+    setEditingTransaction(null)
+    loadTransactions(pagination.page) // Refresh current page
+  }
+
+  const handleRowClick = (transaction: TransactionWithCategory) => {
+    setEditingTransaction(transaction)
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent, transaction: TransactionWithCategory) => {
+    e.stopPropagation() // Prevent row click from triggering
+    setDeletingTransaction(transaction)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingTransaction) return
+
+    setIsDeleting(true)
+    const result = await deleteTransaction(deletingTransaction.id)
+    setIsDeleting(false)
+
+    if (result.success) {
+      setDeletingTransaction(null)
+      // If we're on a page with only one item and it's not the first page, go back
+      if (transactions.length === 1 && pagination.page > 1) {
+        loadTransactions(pagination.page - 1)
+      } else {
+        loadTransactions(pagination.page)
+      }
+    }
   }
 
   return (
@@ -120,11 +165,16 @@ export default function TransactionsPage() {
                 <TableHead>Description</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
+                <TableRow
+                  key={transaction.id}
+                  onClick={() => handleRowClick(transaction)}
+                  className="cursor-pointer hover:bg-gray-50"
+                >
                   <TableCell>{formatDate(transaction.date)}</TableCell>
                   <TableCell>
                     {transaction.description || (
@@ -141,6 +191,16 @@ export default function TransactionsPage() {
                   >
                     {transaction.type === CategoryType.income ? "+" : "-"}
                     {formatAmount(transaction.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteClick(e, transaction)}
+                      className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -193,6 +253,61 @@ export default function TransactionsPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Edit Transaction Modal */}
+      <Dialog
+        open={!!editingTransaction}
+        onOpenChange={(open) => {
+          if (!open) setEditingTransaction(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+          </DialogHeader>
+          {editingTransaction && (
+            <TransactionForm
+              transaction={editingTransaction}
+              onSuccess={handleTransactionUpdated}
+              onCancel={() => setEditingTransaction(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deletingTransaction}
+        onOpenChange={(open) => {
+          if (!open) setDeletingTransaction(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction? This action cannot
+              be undone.
+              {deletingTransaction && (
+                <span className="block mt-2 font-medium text-gray-700">
+                  {deletingTransaction.description || "No description"} -{" "}
+                  {formatAmount(deletingTransaction.amount)}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
