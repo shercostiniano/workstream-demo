@@ -48,8 +48,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created seed script, 35 transactions added (7 income, 28 expense) spanning 6 months. Includes stable monthly salary of $4500 plus Q4 bonus. Typecheck passes."
     },
     {
       "id": "US-004",
@@ -64,8 +64,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created seed script, 73 transactions added (31 income, 42 expense) spanning 6 months. Income includes variable consulting fees and product sales. Expenses include office rent, utilities, marketing, contractor payments, etc. Typecheck passes."
     },
     {
       "id": "US-005",
@@ -80,8 +80,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created seed script, 43 transactions added (12 income, 31 expense) spanning 6 months. Income ranges $1200-1500 biweekly with reduced hours in some months. December and October show deficits (expenses > income) demonstrating financial stress. Typecheck passes."
     },
     {
       "id": "US-006",

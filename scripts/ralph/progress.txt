@@ -47,3 +47,61 @@ Started: Sun Feb  1 03:37:49 CET 2026
   - Get category IDs by querying user's categories first
   - CategoryType enum values are 'income' and 'expense' (lowercase)
 ---
+
+## 2026-02-01 - US-003
+- What was implemented: Populated 35 transactions for Michael Chen (salaried employee)
+- Files changed:
+  - `prisma/seed-michael-transactions.ts` (new file) - Seed script for Michael's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 7 income transactions (6 monthly salaries of $4500 + Q4 bonus of $2000)
+  - 28 expense transactions (rent, utilities, food, transportation, entertainment, healthcare)
+  - Total income: $29,000.00
+  - Total expenses: $16,454.00
+  - Net: $12,546.00
+- Consistent monthly pattern: Salary on the 1st, rent on the 1st, utilities mid-month
+- **Learnings for future iterations:**
+  - Use fixed dates for consistent recurring transactions (e.g., salary on 1st)
+  - Salaried users have more predictable patterns than freelancers
+---
+
+## 2026-02-01 - US-004
+- What was implemented: Populated 73 transactions for Emily Rodriguez (business owner)
+- Files changed:
+  - `prisma/seed-emily-transactions.ts` (new file) - Seed script for Emily's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 31 income transactions (consulting fees $2000-8000, product sales $500-2000)
+  - 42 expense transactions (office rent $800, utilities, supplies, marketing, contractor payments)
+  - Total income: $100,241.00
+  - Total expenses: $24,098.00
+  - Net: $76,143.00
+- Mix of business consulting income and product sales with variable amounts
+- Business expenses include: office rent, utilities, marketing, contractor payments, professional services
+- **Learnings for future iterations:**
+  - Business owners have more varied income sources than salaried employees
+  - Use "Freelance" category for consulting income, "Other Income" for product sales
+  - Use "Other Expense" category for business-specific expenses like marketing and contractor payments
+---
+
+## 2026-02-01 - US-005
+- What was implemented: Populated 43 transactions for James Wilson (part-time worker)
+- Files changed:
+  - `prisma/seed-james-transactions.ts` (new file) - Seed script for James's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 12 income transactions (biweekly part-time wages $800-1500)
+  - 31 expense transactions (rent $900, food $200-300, transportation, utilities, healthcare, emergencies)
+  - Total income: $14,393.00
+  - Total expenses: $9,584.00
+  - Net: $4,809.00
+- Financial stress demonstrated:
+  - December 2025: Income $1,658, Expenses $1,940, Net -$282 (DEFICIT)
+  - October 2025: Income $1,781, Expenses $1,921, Net -$140 (DEFICIT)
+- Reduced income months simulate missed work due to illness, scheduling issues
+- Emergency expenses (car repair, urgent care, holiday gifts) create stress months
+- **Learnings for future iterations:**
+  - To create financial stress, reduce income AND add unexpected expenses in same month
+  - Part-time workers have variable income due to scheduling/hours fluctuations
+  - Emergency expenses (car repair, medical) are realistic causes of financial stress
+---
