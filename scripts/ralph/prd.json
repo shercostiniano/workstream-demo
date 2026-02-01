@@ -97,8 +97,8 @@
         "Verify in browser using dev-browser skill - view invoices list for testuser3"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created seed script with 5 invoices. Statuses: 1 draft ($5,500), 2 sent ($7,500 and $5,150), 1 paid ($8,100), 1 cancelled ($3,000). Total invoice value $29,250. Each invoice has 2-3 line items with consulting services. Verified in browser - all invoices display correctly with status badges."
     },
     {
       "id": "US-007",
