@@ -32,8 +32,8 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created seed script, 59 transactions added (16 income, 43 expense) spanning 6 months. Typecheck passes."
     },
     {
       "id": "US-003",

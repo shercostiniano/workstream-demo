@@ -7,6 +7,8 @@ Started: Sun Feb  1 03:37:49 CET 2026
 - Password hashing uses bcryptjs with 10 rounds
 - Prisma client uses better-sqlite3 adapter with file-based database
 - Run TypeScript files with `npx tsx <file>`
+- Transaction amounts are stored in cents (multiply dollars by 100)
+- CategoryType enum: 'income' and 'expense' (lowercase)
 
 ---
 
@@ -26,4 +28,22 @@ Started: Sun Feb  1 03:37:49 CET 2026
   - The dev server runs on port 3000 by default
   - Each user gets 11 default categories (4 income + 7 expense)
   - Browser verification confirmed: login works and redirects to dashboard
+---
+
+## 2026-02-01 - US-002
+- What was implemented: Populated 59 transactions for Sarah Johnson (freelancer)
+- Files changed:
+  - `prisma/seed-sarah-transactions.ts` (new file) - Seed script for Sarah's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 16 income transactions (freelance payments $500-5000)
+  - 43 expense transactions (rent, utilities, food, software, equipment, etc.)
+  - Total income: $50,024.00
+  - Total expenses: $12,923.96
+- All transactions have realistic descriptions and dates distributed across 6 months
+- **Learnings for future iterations:**
+  - Amounts in the database are stored in cents (multiply dollars by 100)
+  - Use `prisma.transaction.create()` directly for seeding (no auth needed)
+  - Get category IDs by querying user's categories first
+  - CategoryType enum values are 'income' and 'expense' (lowercase)
 ---
