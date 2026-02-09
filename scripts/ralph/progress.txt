@@ -1,356 +1,130 @@
+# Ralph Progress Log
+Started: Sun Feb  1 03:37:49 CET 2026
+
 ## Codebase Patterns
-- Node.js installed via nvm: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"` must be sourced before npm commands
-- Project uses Next.js 16.1.6 with App Router and TypeScript
-- Tailwind CSS v4 with `@tailwindcss/postcss` plugin
-- shadcn/ui components are in `src/components/ui/`
-- Prisma configured with SQLite datasource (`prisma/schema.prisma`)
-- NextAuth.js v5 (beta) for authentication
-- Type checking: run `npx tsc --noEmit` (no npm typecheck script available)
-- Prisma field mapping: use `@map("snake_case")` for fields, `@@map("table_name")` for models
-- Prisma 7.x requires `@prisma/adapter-better-sqlite3` for SQLite - use `PrismaBetterSqlite3({ url: "path/to/db.db" })`
-- Prisma client singleton pattern: use `src/lib/prisma.ts` with global caching for development hot reload
-- Import from generated Prisma client: `import { PrismaClient } from "@/generated/prisma/client"` and `import { CategoryType } from "@/generated/prisma/client"`
-- IMPORTANT: Client components ("use client") cannot import from `@/generated/prisma/client` - use `@/lib/types` for shared types like CategoryType
-- AlertDialog component from shadcn/ui for confirmation dialogs
+- User registration uses `registerUser` action in `src/lib/actions/auth.ts`
+- Default categories are seeded via `seedDefaultCategories` function
+- Password hashing uses bcryptjs with 10 rounds
+- Prisma client uses better-sqlite3 adapter with file-based database
+- Run TypeScript files with `npx tsx <file>`
+- Transaction amounts are stored in cents (multiply dollars by 100)
+- CategoryType enum: 'income' and 'expense' (lowercase)
+- InvoiceStatus enum: 'draft', 'sent', 'paid', 'cancelled' (lowercase)
+- Invoice line items use unitPrice in cents and quantity
 
 ---
 
-# Progress Log
-
-## 2026-01-29 - US-001
-- What was implemented: Initialized Next.js project with all required dependencies
+## 2026-02-01 - US-001
+- What was implemented: Created 5 test user accounts with seeded default categories
 - Files changed:
-  - Created entire project structure with Next.js 16.1.6
-  - Configured Tailwind CSS v4
-  - Installed and initialized Prisma ORM with SQLite
-  - Installed NextAuth.js v5 beta
-  - Added shadcn/ui with button, input, card, dialog, dropdown-menu, table components
-  - Installed Recharts for charts
+  - `prisma/seed-test-users.ts` (new file) - Seed script for test users
+  - `dev.db` - Database updated with new users
+- Test users created:
+  - testuser1@example.com (Sarah Johnson)
+  - testuser2@example.com (Michael Chen)
+  - testuser3@example.com (Emily Rodriguez)
+  - testuser4@example.com (James Wilson)
+  - testuser5@example.com (Amanda Foster)
+- All accounts use password: admin123
 - **Learnings for future iterations:**
-  - Node.js needs to be set up via nvm before running npm commands
-  - Next.js create-next-app will fail if directory has existing files - need to create in subdirectory first then move
-  - Prisma uses a config file `prisma.config.ts` for datasource configuration
-  - shadcn/ui initialization uses `npx shadcn@latest init -d` for default settings
+  - The dev server runs on port 3000 by default
+  - Each user gets 11 default categories (4 income + 7 expense)
+  - Browser verification confirmed: login works and redirects to dashboard
 ---
 
-## 2026-01-29 - US-002
-- What was implemented: Created User model in Prisma schema with all required fields
+## 2026-02-01 - US-002
+- What was implemented: Populated 59 transactions for Sarah Johnson (freelancer)
 - Files changed:
-  - `prisma/schema.prisma` - Added User model with id, email (unique), password_hash, name, created_at, updated_at
-  - `prisma/migrations/20260129223330_add_user_table/migration.sql` - Migration file for users table
+  - `prisma/seed-sarah-transactions.ts` (new file) - Seed script for Sarah's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 16 income transactions (freelance payments $500-5000)
+  - 43 expense transactions (rent, utilities, food, software, equipment, etc.)
+  - Total income: $50,024.00
+  - Total expenses: $12,923.96
+- All transactions have realistic descriptions and dates distributed across 6 months
 - **Learnings for future iterations:**
-  - Prisma uses `@map()` to rename fields for database (e.g., `passwordHash` -> `password_hash`)
-  - Use `@@map()` to rename tables (e.g., `User` model -> `users` table)
-  - Run `npx tsc --noEmit` for type checking since there's no `npm run typecheck` script
+  - Amounts in the database are stored in cents (multiply dollars by 100)
+  - Use `prisma.transaction.create()` directly for seeding (no auth needed)
+  - Get category IDs by querying user's categories first
+  - CategoryType enum values are 'income' and 'expense' (lowercase)
 ---
 
-## 2026-01-29 - US-003
-- What was implemented: Created Category model in Prisma schema for transaction categories
+## 2026-02-01 - US-003
+- What was implemented: Populated 35 transactions for Michael Chen (salaried employee)
 - Files changed:
-  - `prisma/schema.prisma` - Added CategoryType enum (income/expense) and Category model with id, user_id, name, type, is_default
-  - `prisma/migrations/20260129223532_add_categories_table/migration.sql` - Migration file for categories table
+  - `prisma/seed-michael-transactions.ts` (new file) - Seed script for Michael's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 7 income transactions (6 monthly salaries of $4500 + Q4 bonus of $2000)
+  - 28 expense transactions (rent, utilities, food, transportation, entertainment, healthcare)
+  - Total income: $29,000.00
+  - Total expenses: $16,454.00
+  - Net: $12,546.00
+- Consistent monthly pattern: Salary on the 1st, rent on the 1st, utilities mid-month
 - **Learnings for future iterations:**
-  - Prisma enums are defined at schema level with `enum EnumName { value1 value2 }`
-  - Relations are added to both models (e.g., `categories Category[]` on User and `user User @relation(...)` on Category)
-  - Foreign key fields use `@map()` for snake_case naming consistency
+  - Use fixed dates for consistent recurring transactions (e.g., salary on 1st)
+  - Salaried users have more predictable patterns than freelancers
 ---
 
-## 2026-01-29 - US-004
-- What was implemented: Created Transaction model in Prisma schema for income/expense transactions
+## 2026-02-01 - US-004
+- What was implemented: Populated 73 transactions for Emily Rodriguez (business owner)
 - Files changed:
-  - `prisma/schema.prisma` - Added Transaction model with id, user_id, type, amount (integer for cents), description, category_id, date, created_at, updated_at
-  - `prisma/migrations/20260129223712_add_transactions_table/migration.sql` - Migration file for transactions table
+  - `prisma/seed-emily-transactions.ts` (new file) - Seed script for Emily's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 31 income transactions (consulting fees $2000-8000, product sales $500-2000)
+  - 42 expense transactions (office rent $800, utilities, supplies, marketing, contractor payments)
+  - Total income: $100,241.00
+  - Total expenses: $24,098.00
+  - Net: $76,143.00
+- Mix of business consulting income and product sales with variable amounts
+- Business expenses include: office rent, utilities, marketing, contractor payments, professional services
 - **Learnings for future iterations:**
-  - Transaction amount stored as Int (cents) to avoid floating point precision issues
-  - CategoryType enum can be reused across models (used for both Category and Transaction types)
-  - Relations need to be added to both ends (User.transactions, Category.transactions, Transaction.user, Transaction.category)
+  - Business owners have more varied income sources than salaried employees
+  - Use "Freelance" category for consulting income, "Other Income" for product sales
+  - Use "Other Expense" category for business-specific expenses like marketing and contractor payments
 ---
 
-## 2026-01-29 - US-005
-- What was implemented: Created Invoice model in Prisma schema for invoices
+## 2026-02-01 - US-005
+- What was implemented: Populated 43 transactions for James Wilson (part-time worker)
 - Files changed:
-  - `prisma/schema.prisma` - Added InvoiceStatus enum (draft/sent/paid) and Invoice model with id, user_id, invoice_number, client_name, client_email, status, issue_date, due_date, notes, created_at, updated_at
-  - `prisma/migrations/20260129223859_add_invoices_table/migration.sql` - Migration file for invoices table
+  - `prisma/seed-james-transactions.ts` (new file) - Seed script for James's transactions
+  - `dev.db` - Database updated with transactions
+- Transaction breakdown:
+  - 12 income transactions (biweekly part-time wages $800-1500)
+  - 31 expense transactions (rent $900, food $200-300, transportation, utilities, healthcare, emergencies)
+  - Total income: $14,393.00
+  - Total expenses: $9,584.00
+  - Net: $4,809.00
+- Financial stress demonstrated:
+  - December 2025: Income $1,658, Expenses $1,940, Net -$282 (DEFICIT)
+  - October 2025: Income $1,781, Expenses $1,921, Net -$140 (DEFICIT)
+- Reduced income months simulate missed work due to illness, scheduling issues
+- Emergency expenses (car repair, urgent care, holiday gifts) create stress months
 - **Learnings for future iterations:**
-  - Each new model needs its own status enum when appropriate (InvoiceStatus separate from CategoryType)
-  - Optional fields use `?` suffix (e.g., `clientEmail String?` for nullable email)
-  - Always add the inverse relation to User model when creating new entities (User.invoices)
+  - To create financial stress, reduce income AND add unexpected expenses in same month
+  - Part-time workers have variable income due to scheduling/hours fluctuations
+  - Emergency expenses (car repair, medical) are realistic causes of financial stress
 ---
 
-## 2026-01-29 - US-006
-- What was implemented: Created InvoiceItem model in Prisma schema for invoice line items
+## 2026-02-01 - US-006
+- What was implemented: Created 5 invoices for Emily Rodriguez (testuser3@example.com)
 - Files changed:
-  - `prisma/schema.prisma` - Added InvoiceItem model with id, invoice_id, description, quantity (Int), unit_price (Int for cents), and cascade delete relation to Invoice
-  - `prisma/migrations/20260129224043_add_invoice_items_table/migration.sql` - Migration file for invoice_items table
+  - `prisma/seed-emily-invoices.ts` (new file) - Seed script for Emily's invoices
+  - `dev.db` - Database updated with invoices and invoice items
+- Invoice breakdown:
+  - INV-2026-0001: Tech Innovations LLC - Draft - $5,500.00 (2 items)
+  - INV-2026-0002: Global Solutions Inc - Sent - $7,500.00 (3 items)
+  - INV-2026-0003: StartupXYZ - Sent (overdue) - $5,150.00 (3 items)
+  - INV-2026-0004: Acme Industries - Paid - $8,100.00 (3 items)
+  - INV-2026-0005: Digital Dynamics Corp - Cancelled - $3,000.00 (3 items)
+- Total invoice value: $29,250.00
+- Each invoice has realistic client names/emails and consulting service line items
+- Browser verification: All 5 invoices displayed correctly with proper status badges
 - **Learnings for future iterations:**
-  - Cascade delete is configured via `onDelete: Cascade` in the relation decorator
-  - Invoice items don't need timestamps since they are tightly coupled to invoices
-  - The parent model (Invoice) needs `items InvoiceItem[]` for the inverse relation
----
-
-## 2026-01-29 - US-007
-- What was implemented: Created Receipt model in Prisma schema for receipt uploads
-- Files changed:
-  - `prisma/schema.prisma` - Added Receipt model with id, user_id, transaction_id (nullable), file_path, file_name, uploaded_at, and relations to User and Transaction
-  - `prisma/migrations/20260129224250_add_receipts_table/migration.sql` - Migration file for receipts table
-- **Learnings for future iterations:**
-  - Nullable foreign keys use `String?` for the field type and `ModelName?` for the relation type
-  - Receipts can exist independently of transactions (transaction_id is nullable for unattached receipts)
-  - Remember to add inverse relations to all referenced models (User.receipts and Transaction.receipts)
-- Server actions pattern: create files in `src/lib/actions/` with `"use server"` directive at top
-
----
-
-## 2026-01-29 - US-008
-- What was implemented: Created seed function for default categories and set up Prisma client singleton
-- Files changed:
-  - `src/lib/prisma.ts` - New file: Prisma client singleton with better-sqlite3 adapter
-  - `src/lib/seed-categories.ts` - New file: `seedDefaultCategories(userId)` function that creates default income/expense categories
-  - `package.json` - Added `@prisma/adapter-better-sqlite3` and `better-sqlite3` dependencies
-- **Learnings for future iterations:**
-  - Prisma 7.x requires a driver adapter for SQLite - use `@prisma/adapter-better-sqlite3`
-  - The adapter uses `PrismaBetterSqlite3({ url: "path.db" })` syntax (note: Sqlite3 not SQLite3)
-  - Generated Prisma types are in `@/generated/prisma/client` not `@/generated/prisma`
-  - Seed function uses `prisma.category.createMany()` for batch insertion
-  - Default categories are: Salary, Freelance, Investments, Other Income (income) and Rent, Utilities, Food, Transportation, Entertainment, Healthcare, Other Expense (expense)
----
-
-## 2026-01-29 - US-009
-- What was implemented: User registration page with form validation and bcrypt password hashing
-- Files changed:
-  - `src/app/register/page.tsx` - New file: Registration page with form for email, password, confirm password, name
-  - `src/lib/actions/auth.ts` - New file: Server action `registerUser()` with validation and bcrypt hashing
-  - `package.json` - Added `bcryptjs` dependency for password hashing
-- **Learnings for future iterations:**
-  - Use `bcryptjs` instead of `bcrypt` for better cross-platform compatibility
-  - Server actions use `"use server"` directive and return typed results (e.g., `RegisterResult`)
-  - Email validation regex: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
-  - Store emails lowercase to ensure case-insensitive uniqueness
-  - Client components use `"use client"` directive for forms with state
-  - Use `useRouter` from `next/navigation` for client-side navigation after form submission
----
-
-## 2026-01-30 - US-016
-- What was implemented: Edit and delete functionality for transactions
-- Files changed:
-  - `src/app/(dashboard)/transactions/page.tsx` - Updated: Added edit modal with TransactionForm, delete button with AlertDialog confirmation
-  - `src/components/transactions/transaction-form.tsx` - Updated: Added support for editing (accepts optional transaction prop, uses updateTransaction action)
-  - `src/components/ui/alert-dialog.tsx` - New file: Added AlertDialog shadcn/ui component for delete confirmation
-  - `src/lib/types.ts` - New file: Shared types for client components (CategoryType enum-like object)
-- **Learnings for future iterations:**
-  - Client components cannot import from `@/generated/prisma/client` - it pulls Node.js-only code into the browser bundle
-  - Use a shared types file (`src/lib/types.ts`) to export enum-like values that can be used in client components
-  - AlertDialog from shadcn/ui provides confirmation dialogs with AlertDialogAction/AlertDialogCancel
-  - Row click for edit with e.stopPropagation() on delete button to prevent edit modal from opening
-  - Form state needs special handling for edit mode (initialLoad flag to prevent clearing values on type change)
----
-
-## 2026-01-30 - US-010 through US-015 (PRD Sync)
-- What was implemented: Synced PRD status with existing commits
-- Files changed:
-  - `scripts/ralph/prd.json` - Marked US-010 through US-015 as `passes: true` since they were already committed
-- **Learnings for future iterations:**
-  - PRD file can become out of sync if previous iterations crashed or failed to update
-  - Check git log against PRD status when starting a session to identify already-completed work
-  - Stories US-010 (login), US-011 (logout/middleware), US-012 (navigation), US-013 (transaction actions), US-014 (transaction form), US-015 (transaction list) were previously implemented
----
-
-## 2026-01-30 - US-017
-- What was implemented: Transaction filters with date range, quick filters, category multi-select, and running totals
-- Files changed:
-  - `src/components/transactions/transaction-filters.tsx` - New file: Filter component with date range picker, quick filter buttons, category multi-select
-  - `src/app/(dashboard)/transactions/page.tsx` - Updated: Integrated filters, added totals display, wrapped in Suspense for URL params
-  - `src/lib/actions/transactions.ts` - Updated: Added `getTransactionTotals` action for calculating filtered totals
-  - `src/components/ui/checkbox.tsx` - New file: shadcn/ui checkbox component
-  - `src/components/ui/popover.tsx` - New file: shadcn/ui popover component
-  - `src/components/ui/badge.tsx` - New file: shadcn/ui badge component
-  - `src/components/ui/select.tsx` - New file: shadcn/ui select component
-- **Learnings for future iterations:**
-  - useSearchParams requires Suspense boundary in Next.js App Router
-  - URL params are persisted via router.replace with scroll: false to prevent page jumps
-  - Quick filter dates need end-of-day time (23:59:59) for inclusive date ranges
-  - Totals are calculated separately from paginated results for accuracy
-  - Multi-select category filter uses Popover + Checkbox pattern from shadcn/ui
----
-
-## 2026-01-30 - US-018
-- What was implemented: Server actions for full CRUD operations on categories
-- Files changed:
-  - `src/lib/actions/categories.ts` - New file: getCategories, createCategory, updateCategory, deleteCategory actions
-- **Learnings for future iterations:**
-  - Server actions for a new entity follow the same pattern as transactions.ts
-  - Category delete must check for transactions using the category before allowing deletion
-  - Default categories have `isDefault: true` and cannot be edited or deleted
-  - Duplicate category check needs to include type (income/expense) - same name can exist for different types
-  - Actions return typed results with success/error pattern: `{ success: true; data: T } | { success: false; error: string }`
----
-
-## 2026-01-30 - US-019 (PRD Sync)
-- What was implemented: Synced PRD status - US-019 was already committed but PRD not updated
-- Files changed:
-  - `scripts/ralph/prd.json` - Marked US-019 as `passes: true`
-- **Learnings for future iterations:**
-  - PRD can get out of sync if previous iteration crashed after committing but before updating PRD
-  - Check git log against PRD when starting to identify already-completed work
-  - Categories page implements: grouped by type, add form with dialog, edit/delete with modals, disabled buttons for default categories, error messages for delete failures
----
-
-## 2026-01-30 - US-020
-- What was implemented: Dashboard page with financial summary
-- Files changed:
-  - `src/app/(dashboard)/page.tsx` - Complete dashboard with summary cards, recent transactions, and quick action buttons
-  - `src/lib/actions/transactions.ts` - Added `getDashboardSummary` action for current month totals and recent transactions
-  - `src/components/transactions/transaction-form.tsx` - Added `defaultType` prop for quick action buttons
-- **Learnings for future iterations:**
-  - Dashboard uses Card components from shadcn/ui for summary display
-  - Quick action buttons require passing `defaultType` to TransactionForm to pre-select income/expense
-  - Current month date range: first day of month to last day (with 23:59:59.999 for inclusive end)
-  - Summary data (totals + recent transactions) can be combined in a single server action to reduce round trips
-  - Use lucide-react icons: TrendingUp (income), TrendingDown (expense), DollarSign (balance)
----
-
-## 2026-01-30 - US-021
-- What was implemented: Server actions for complete invoice CRUD operations
-- Files changed:
-  - `src/lib/actions/invoices.ts` - New file: createInvoice, getInvoices, getInvoice, updateInvoice, updateInvoiceStatus, deleteInvoice actions
-- **Learnings for future iterations:**
-  - Invoice number auto-generation uses count + 1 with zero-padding: `INV-${(count+1).toString().padStart(3, "0")}`
-  - Invoice totals are calculated from line items: `sum(quantity * unitPrice)`
-  - Status transitions are validated: draft -> sent -> paid (one-way only)
-  - Only draft invoices can be edited or deleted
-  - Use `prisma.$transaction()` when needing to delete and recreate related records (like replacing invoice items)
-  - Follow same result type pattern: `{ success: true; data: T } | { success: false; error: string }`
----
-
-## 2026-01-30 - US-022
-- What was implemented: Invoice form component with client info, line items, and action buttons
-- Files changed:
-  - `src/components/invoices/invoice-form.tsx` - New file: InvoiceForm component with dynamic line items, validation, and draft/sent actions
-  - `src/app/(dashboard)/invoices/page.tsx` - Updated: Added Create Invoice button and modal
-  - `src/lib/types.ts` - Updated: Added InvoiceStatus type for client components
-- **Learnings for future iterations:**
-  - Invoice form uses dynamic line items with add/remove functionality
-  - Each line item has id, description, quantity, unitPrice (as strings for form inputs)
-  - Convert unit price from dollars to cents on save: `Math.round(parseFloat(price) * 100)`
-  - Default due date is 30 days from issue date
-  - Mark as Sent flow: first save/update invoice, then update status to "sent"
-  - Use `router.refresh()` after updates to refresh server data
-  - Client components can't import Prisma types - use shared types file for InvoiceStatus
----
-
-## 2026-01-30 - US-023
-- What was implemented: Invoices list page with table, status badges, and row navigation
-- Files changed:
-  - `src/app/(dashboard)/invoices/page.tsx` - Updated: Full list page with table showing invoice number, client name, total, status badge, due date, row click navigation to detail page
-- **Learnings for future iterations:**
-  - Badge component from shadcn/ui supports variant prop (secondary, default, outline) plus custom className for colors
-  - Status badge styling: gray=draft (secondary), blue=sent (default with custom blue classes), green=paid (outline with custom green classes)
-  - `eslint-disable-next-line react-hooks/set-state-in-effect` directive must be placed INSIDE the useEffect body, directly above the function call that triggers setState
-  - Row click navigation uses `router.push(\`/invoices/\${invoice.id}\`)`
-  - Invoice totals are calculated server-side in the getInvoices action from line items
----
-
-## 2026-01-30 - US-024
-- What was implemented: Invoice detail and edit page with status change functionality
-- Files changed:
-  - `src/app/(dashboard)/invoices/[id]/page.tsx` - New file: Invoice detail page showing all invoice info, line items, edit modal for drafts, status change buttons
-- **Learnings for future iterations:**
-  - Dynamic routes in Next.js App Router use folder naming with brackets: `[id]/page.tsx`
-  - useParams() hook from next/navigation retrieves dynamic route parameters
-  - InvoiceForm component already supports editing via the `invoice` prop and handles read-only state for non-draft invoices
-  - Status change buttons should be conditional: Mark as Sent for draft, Mark as Paid for sent
-  - Reuse status badge styling functions from list page for consistency
-  - Card components work well for grouping related information on detail pages
----
-
-## 2026-01-30 - US-025
-- What was implemented: Invoice delete and void functionality
-- Files changed:
-  - `prisma/schema.prisma` - Added `cancelled` status to InvoiceStatus enum
-  - `src/lib/actions/invoices.ts` - Added `voidInvoice` action for sent/paid invoices, updated validTransitions for cancelled status
-  - `src/lib/types.ts` - Added `cancelled` to InvoiceStatus type and object
-  - `src/app/(dashboard)/invoices/[id]/page.tsx` - Added Delete button (draft only) and Void button (sent/paid) with AlertDialog confirmations
-  - `src/app/(dashboard)/invoices/page.tsx` - Updated badge styling to handle cancelled status
-- **Learnings for future iterations:**
-  - SQLite doesn't require migrations for adding enum values (stored as strings)
-  - AlertDialog from shadcn/ui works well with AlertDialogTrigger wrapping a Button
-  - When adding enum values, update: Prisma schema, regenerate client, shared types file, and any Record<EnumType> maps
-  - Void action is separate from status transitions - it's a special case that doesn't follow the normal draft->sent->paid flow
-  - Use `variant="destructive"` for delete buttons and red styling for cancelled status badges
----
-
-## 2026-01-30 - US-026
-- What was implemented: Receipt upload functionality with file upload, progress indicator, and transaction attachment
-- Files changed:
-  - `src/app/api/upload/route.ts` - New file: POST endpoint for file uploads with validation (jpg/png/pdf, max 5MB)
-  - `src/app/api/uploads/[filename]/route.ts` - New file: GET endpoint for serving uploaded files
-  - `src/lib/actions/receipts.ts` - New file: Server actions for getReceiptsForTransaction, linkReceiptToTransaction, deleteReceipt
-  - `src/components/receipts/receipt-upload.tsx` - New file: ReceiptUpload component with drag-and-drop, progress bar, ReceiptThumbnail, ReceiptList
-  - `src/components/transactions/transaction-form.tsx` - Updated: Added receipt upload UI to form, handles both new and editing modes
-- **Learnings for future iterations:**
-  - File uploads in Next.js App Router use FormData with the `file` field
-  - Use XMLHttpRequest for upload progress tracking (fetch doesn't support upload progress)
-  - Files are saved to `/uploads` directory with UUID-based unique names
-  - API routes serve files with appropriate Content-Type headers
-  - For new transactions, receipts are uploaded first then linked after transaction creation
-  - For editing, receipts can be uploaded directly with transactionId and are immediately linked
-  - Use `e.stopPropagation()` on delete buttons inside clickable thumbnails
----
-
-## 2026-01-30 - US-027
-- What was implemented: View and delete receipts functionality
-- Files changed:
-  - `src/lib/actions/transactions.ts` - Added ReceiptInfo type and updated getTransactions to include receipts
-  - `src/components/receipts/receipt-upload.tsx` - Added ReceiptViewModal component with full-size view, download, and delete functionality
-  - `src/app/(dashboard)/transactions/page.tsx` - Added receipt thumbnail column to transactions table with view modal integration
-  - `src/lib/actions/receipts.ts` - Updated deleteReceipt to also delete the file from storage
-- **Learnings for future iterations:**
-  - TransactionWithCategory type needed to be extended to include receipts array
-  - ReceiptViewModal uses Dialog for viewing and AlertDialog for delete confirmation
-  - Download functionality uses programmatic anchor element creation with download attribute
-  - File deletion uses Node.js fs/promises unlink with try-catch to handle missing files gracefully
-  - Use `onClick={(e) => e.stopPropagation()}` wrapper div to prevent row click events when clicking thumbnails
----
-
-
-## 2026-01-30 - US-028
-- What was implemented: Income vs Expense report with date range selector, summary cards, bar chart, and monthly breakdown
-- Files changed:
-  - `src/lib/actions/reports.ts` - New file: Server action `getIncomeExpenseReport` that calculates totals and monthly breakdown
-  - `src/app/(dashboard)/reports/page.tsx` - Updated: Full reports page with date range selector, quick filters, summary cards, Recharts bar chart, and monthly breakdown table
-- **Learnings for future iterations:**
-  - Recharts is already installed (`recharts: ^3.7.0`) - use ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
-  - Recharts Tooltip formatter should return an array like `[formattedValue]` not `[value, undefined]`
-  - Monthly data aggregation: use Map with `year-month` keys, then sort by year and month number
-  - Quick filters for reports: "This Month", "Last Month", "Last 30 Days", "Year to Date", "Full Year"
-  - Show monthly breakdown table only when range spans multiple months (`monthlyBreakdown.length > 1`)
-  - Convert cents to dollars for chart display by dividing by 100
----
-
-## 2026-01-30 - US-029
-- What was implemented: Category breakdown report with toggle, pie chart, and table
-- Files changed:
-  - `src/lib/actions/reports.ts` - Added `getCategoryBreakdown` action that calculates totals per category with percentages
-  - `src/app/(dashboard)/reports/page.tsx` - Added category breakdown section with income/expense toggle, Recharts PieChart, and breakdown table
-- **Learnings for future iterations:**
-  - PieChart from Recharts uses `Pie` component with `Cell` for colors and custom `label` prop for labels
-  - Recharts label prop receives props with optional fields (e.g., `name?: string; percent?: number`) - handle undefined cases
-  - Use color constants array (`CHART_COLORS`) to cycle through colors for pie segments
-  - Category data is grouped by categoryId using Map, then converted to array sorted by amount descending
-  - Reuse existing date range state from Income vs Expense report for the same period
-  - Add color indicator dots in table to match pie chart colors for visual consistency
----
-
-## 2026-01-30 - US-030
-- What was implemented: CSV export functionality for transactions
-- Files changed:
-  - `src/lib/actions/transactions.ts` - Added `exportTransactionsToCSV` action that generates CSV content from filtered transactions
-  - `src/app/(dashboard)/transactions/page.tsx` - Added Export CSV button that downloads filtered transactions as CSV file
-- **Learnings for future iterations:**
-  - CSV export uses Blob with `text/csv;charset=utf-8;` MIME type for proper encoding
-  - File download uses programmatic anchor element creation with download attribute
-  - Export respects current filters (date range, category) by reusing filter state
-  - Amount converted from cents to dollars with `.toFixed(2)` for consistent decimal formatting
-  - CSV strings with special characters (commas, quotes) should be quoted with double-quote escaping
-  - URL.createObjectURL needs cleanup with URL.revokeObjectURL after download
+  - Invoice model uses `InvoiceStatus` enum: draft, sent, paid, cancelled
+  - Invoice amounts are also in cents (unitPrice field in InvoiceItem)
+  - Use nested `items: { create: [...] }` in Prisma to create related InvoiceItems
+  - Check for existing invoices before seeding to avoid duplicates
 ---

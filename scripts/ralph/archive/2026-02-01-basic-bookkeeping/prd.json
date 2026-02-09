@@ -16,8 +16,8 @@
         "Verify in browser using dev-browser skill - log in with testuser1@example.com"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "Completed: Created seed script, 5 users created successfully, verified login in browser"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-002",
@@ -32,8 +32,8 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Completed: Created seed script, 59 transactions added (16 income, 43 expense) spanning 6 months. Typecheck passes."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-003",
@@ -48,8 +48,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Completed: Created seed script, 35 transactions added (7 income, 28 expense) spanning 6 months. Includes stable monthly salary of $4500 plus Q4 bonus. Typecheck passes."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-004",
@@ -64,8 +64,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "Completed: Created seed script, 73 transactions added (31 income, 42 expense) spanning 6 months. Income includes variable consulting fees and product sales. Expenses include office rent, utilities, marketing, contractor payments, etc. Typecheck passes."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-005",
@@ -80,8 +80,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": "Completed: Created seed script, 43 transactions added (12 income, 31 expense) spanning 6 months. Income ranges $1200-1500 biweekly with reduced hours in some months. December and October show deficits (expenses > income) demonstrating financial stress. Typecheck passes."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-006",
@@ -97,8 +97,8 @@
         "Verify in browser using dev-browser skill - view invoices list for testuser3"
       ],
       "priority": 6,
-      "passes": true,
-      "notes": "Completed: Created seed script with 5 invoices. Statuses: 1 draft ($5,500), 2 sent ($7,500 and $5,150), 1 paid ($8,100), 1 cancelled ($3,000). Total invoice value $29,250. Each invoice has 2-3 line items with consulting services. Verified in browser - all invoices display correctly with status badges."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-007",
