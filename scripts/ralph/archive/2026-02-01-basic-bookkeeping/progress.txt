@@ -1,0 +1,22 @@
+## Codebase Patterns
+- Node.js installed via nvm: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"` must be sourced before npm commands
+- Project uses Next.js 16.1.6 with App Router and TypeScript
+- Tailwind CSS v4 with `@tailwindcss/postcss` plugin
+- shadcn/ui components are in `src/components/ui/`
+- Prisma configured with SQLite datasource (`prisma/schema.prisma`)
+- NextAuth.js v5 (beta) for authentication
+- Type checking: run `npx tsc --noEmit` (no npm typecheck script available)
+- Prisma field mapping: use `@map("snake_case")` for fields, `@@map("table_name")` for models
+- Prisma 7.x requires `@prisma/adapter-better-sqlite3` for SQLite - use `PrismaBetterSqlite3({ url: "path/to/db.db" })`
+- Prisma client singleton pattern: use `src/lib/prisma.ts` with global caching for development hot reload
+- Import from generated Prisma client: `import { PrismaClient } from "@/generated/prisma/client"` and `import { CategoryType } from "@/generated/prisma/client"`
+- IMPORTANT: Client components ("use client") cannot import from `@/generated/prisma/client` - use `@/lib/types` for shared types like CategoryType
+- AlertDialog component from shadcn/ui for confirmation dialogs
+- Server actions pattern: create files in `src/lib/actions/` with `"use server"` directive at top
+- Test accounts use password `admin123` and email format `testuser[N]@example.com`
+- Amounts stored in cents (integer), displayed as dollars
+
+---
+
+# Progress Log
+

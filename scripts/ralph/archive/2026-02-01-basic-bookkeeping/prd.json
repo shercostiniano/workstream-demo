@@ -1,0 +1,314 @@
+{
+  "project": "BasicBookkeeping",
+  "branchName": "ralph/qa-testing-dummy-data",
+  "description": "QA Testing and Dummy Data Population - Comprehensive testing of the bookkeeping application with realistic test data",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create test user accounts",
+      "description": "As a QA tester, I need multiple test accounts so that I can test the application from different user perspectives.",
+      "acceptanceCriteria": [
+        "Create 5 user accounts: testuser1@example.com (Sarah Johnson), testuser2@example.com (Michael Chen), testuser3@example.com (Emily Rodriguez), testuser4@example.com (James Wilson), testuser5@example.com (Amanda Foster)",
+        "All accounts use password admin123",
+        "Each account is created via the registerUser action",
+        "Each account receives default categories on creation",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill - log in with testuser1@example.com"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Populate transactions for Sarah Johnson (freelancer)",
+      "description": "As a QA tester, I need realistic transaction data for a freelance designer with variable income.",
+      "acceptanceCriteria": [
+        "Add 30-40 transactions for testuser1@example.com spanning last 6 months",
+        "Income: Freelance payments $500-5000 (variable, 2-4 per month)",
+        "Expenses: Rent $1500, Utilities $100-200, Food $200-500, Software subscriptions, Equipment",
+        "Realistic descriptions (e.g., 'Logo design for Acme Corp', 'Adobe Creative Cloud subscription')",
+        "Dates distributed across multiple months",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Populate transactions for Michael Chen (salaried)",
+      "description": "As a QA tester, I need realistic transaction data for a salaried employee with stable income.",
+      "acceptanceCriteria": [
+        "Add 25-35 transactions for testuser2@example.com spanning last 6 months",
+        "Income: Monthly salary $4500 on 1st of each month, occasional bonus",
+        "Expenses: Rent $1800, Utilities $150, Food $400-600, Transportation $200, Entertainment $100-300",
+        "Realistic descriptions (e.g., 'Monthly salary - January 2026', 'Grocery shopping at Trader Joes')",
+        "Consistent monthly pattern",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Populate transactions for Emily Rodriguez (business owner)",
+      "description": "As a QA tester, I need realistic transaction data for a small business owner.",
+      "acceptanceCriteria": [
+        "Add 40-50 transactions for testuser3@example.com spanning last 6 months",
+        "Income: Consulting fees $2000-8000 (variable), product sales $500-2000",
+        "Expenses: Office rent $800, Supplies $100-500, Marketing $200-1000, Contractor payments",
+        "Realistic business descriptions (e.g., 'Consulting - Tech Corp Q1', 'Office supplies from Staples')",
+        "Mix of large and small transactions",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Populate transactions for James Wilson (part-time worker)",
+      "description": "As a QA tester, I need realistic transaction data for a part-time worker with lower income.",
+      "acceptanceCriteria": [
+        "Add 20-30 transactions for testuser4@example.com spanning last 6 months",
+        "Income: Part-time wages $1200-1500 biweekly",
+        "Expenses: Rent $900, Food $200-300, Transportation $100, Entertainment $50-100",
+        "Expenses should sometimes exceed income (showing financial stress)",
+        "Realistic descriptions (e.g., 'Paycheck - Week of Jan 15', 'Bus pass monthly')",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Create test invoices for Emily Rodriguez",
+      "description": "As a QA tester, I need invoice data to test invoice features.",
+      "acceptanceCriteria": [
+        "Create 5 invoices for testuser3@example.com",
+        "Mix of statuses: 1 draft, 2 sent, 1 paid, 1 cancelled",
+        "Realistic client names and emails (e.g., 'Tech Innovations LLC', 'Global Solutions Inc')",
+        "Multiple line items per invoice (2-4 items)",
+        "Varied amounts ($500-$10000) and due dates",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill - view invoices list for testuser3"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Smoke test authentication flows",
+      "description": "As a QA tester, I need to verify basic auth flows work.",
+      "acceptanceCriteria": [
+        "Login page loads correctly at /login",
+        "Can log in with testuser1@example.com / admin123",
+        "Redirects to dashboard after login",
+        "Logout redirects to login page",
+        "Protected route /transactions redirects to login when not authenticated",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Smoke test registration validation",
+      "description": "As a QA tester, I need to verify registration validation works.",
+      "acceptanceCriteria": [
+        "Registration page loads at /register",
+        "Registration fails with invalid email format (shows error)",
+        "Registration fails with password less than 8 characters (shows error)",
+        "Registration fails with mismatched passwords (shows error)",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Functional test dashboard accuracy",
+      "description": "As a QA tester, I need to verify the dashboard displays correct data.",
+      "acceptanceCriteria": [
+        "Log in as testuser2@example.com (Michael Chen - stable income)",
+        "Dashboard loads and displays summary cards",
+        "Total Income shows correct sum for current month",
+        "Total Expenses shows correct sum for current month",
+        "Net Balance calculation is correct (Income - Expenses)",
+        "Recent transactions shows last 5 transactions",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Functional test transaction CRUD",
+      "description": "As a QA tester, I need to verify transaction create, edit, delete work.",
+      "acceptanceCriteria": [
+        "Log in as testuser5@example.com (Amanda - minimal data)",
+        "Can create new income transaction via Add Income button",
+        "Can create new expense transaction via Add Expense button",
+        "Can edit existing transaction (change description and amount)",
+        "Can delete transaction with confirmation dialog",
+        "List updates after each operation",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Functional test transaction filters and pagination",
+      "description": "As a QA tester, I need to verify transaction filtering works.",
+      "acceptanceCriteria": [
+        "Log in as testuser1@example.com (Sarah - many transactions)",
+        "Navigate to /transactions",
+        "Date range filter works (select last 30 days)",
+        "Category filter works (filter by Food category)",
+        "Quick filter buttons work (This Month, Last Month)",
+        "Pagination works if more than 20 transactions",
+        "Transaction totals update based on filters",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Functional test categories page",
+      "description": "As a QA tester, I need to verify category management works.",
+      "acceptanceCriteria": [
+        "Log in as testuser1@example.com",
+        "Navigate to /categories",
+        "Default categories displayed and marked as non-editable (buttons disabled)",
+        "Can create new custom expense category",
+        "Can edit custom category name",
+        "Cannot delete category that has transactions (error message shown)",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Functional test reports page",
+      "description": "As a QA tester, I need to verify reports display accurate data.",
+      "acceptanceCriteria": [
+        "Log in as testuser1@example.com (has 6 months of data)",
+        "Navigate to /reports",
+        "Quick filters work (This Month, Last Month, YTD)",
+        "Income vs Expense bar chart displays correctly",
+        "Category breakdown pie chart displays correctly",
+        "Summary cards show correct totals for selected range",
+        "Can toggle between income/expense category breakdown",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Functional test invoice CRUD",
+      "description": "As a QA tester, I need to verify invoice management works.",
+      "acceptanceCriteria": [
+        "Log in as testuser3@example.com (Emily - has invoices)",
+        "Navigate to /invoices",
+        "Invoices list shows all 5 invoices with correct status badges",
+        "Can view invoice details by clicking row",
+        "Can edit draft invoice",
+        "Cannot edit sent/paid invoice (edit disabled)",
+        "Can mark sent invoice as paid",
+        "Can void/cancel an invoice",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Functional test CSV export",
+      "description": "As a QA tester, I need to verify CSV export works.",
+      "acceptanceCriteria": [
+        "Log in as testuser2@example.com",
+        "Navigate to /transactions",
+        "Apply a date filter (last 30 days)",
+        "Click Export CSV button",
+        "CSV file downloads with correct filename format",
+        "CSV contains filtered transactions only",
+        "Amounts formatted as dollars (not cents)",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "E2E test new user onboarding",
+      "description": "As a QA tester, I need to verify a complete new user journey.",
+      "acceptanceCriteria": [
+        "Register new account: qatest@example.com with password admin123",
+        "Redirect to dashboard after registration",
+        "Dashboard shows $0 for all summary cards",
+        "Add first income transaction ($1000 salary)",
+        "Dashboard updates to show $1000 income",
+        "Add first expense transaction ($50 food)",
+        "Dashboard shows correct net balance ($950)",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "E2E test invoice workflow",
+      "description": "As a QA tester, I need to verify a complete invoice lifecycle.",
+      "acceptanceCriteria": [
+        "Log in as testuser3@example.com",
+        "Create new invoice with client details and 3 line items",
+        "Verify total calculation is correct",
+        "Save as draft",
+        "Edit draft to add notes",
+        "Mark invoice as sent",
+        "Verify cannot edit sent invoice",
+        "Mark invoice as paid",
+        "Verify final status is paid",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Cross-viewport responsive testing",
+      "description": "As a QA tester, I need to verify the application works at different viewport sizes.",
+      "acceptanceCriteria": [
+        "Test at mobile viewport (375px width) - navigation usable, forms work",
+        "Test at tablet viewport (768px width) - layout adapts correctly",
+        "Test at desktop viewport (1280px width) - full layout displayed",
+        "Dashboard renders correctly at all sizes",
+        "Transactions table adapts or scrolls horizontally on mobile",
+        "Charts resize appropriately",
+        "Verify in browser using dev-browser skill with resize commands"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
